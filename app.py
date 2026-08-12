@@ -253,6 +253,100 @@ st.markdown("""
         border-top: 1px solid rgba(255,255,255,0.05) !important;
     }
 
+    /* Guide Card inside Expander */
+    .cxr-guide-box {
+        min-height: 160px;
+    }
+
+    /* Mobile-first and Responsive Overrides */
+    @media (max-width: 640px) {
+        /* Container padding reduction to maximize space */
+        [data-testid="stAppViewBlockContainer"] {
+            padding: 16px 12px !important;
+        }
+        [data-testid="stHeader"] {
+            display: none !important;
+        }
+        
+        /* Header Group Styles */
+        .cxr-header-group {
+            flex-direction: column !important;
+            text-align: center !important;
+            padding: 16px !important;
+            gap: 12px !important;
+            margin-bottom: 20px !important;
+        }
+        .cxr-emojicon {
+            width: 48px !important;
+            height: 48px !important;
+            font-size: 24px !important;
+        }
+        .cxr-title {
+            font-size: 22px !important;
+        }
+        .cxr-neon-highlight {
+            margin-left: 0 !important;
+            margin-top: 6px !important;
+            font-size: 14px !important;
+            padding: 2px 8px !important;
+        }
+        .cxr-subtitle {
+            font-size: 12px !important;
+            margin-top: 4px !important;
+        }
+
+        /* Metric Cards Optimization */
+        .uxr-metric-card {
+            padding: 14px 16px !important;
+            min-height: 90px !important;
+            margin-bottom: 12px !important;
+        }
+        .uxr-metric-value {
+            font-size: 22px !important;
+        }
+        .uxr-metric-title {
+            font-size: 10px !important;
+            margin-bottom: 4px !important;
+        }
+        .uxr-metric-delta {
+            font-size: 11px !important;
+            margin-top: 4px !important;
+        }
+
+        /* Alert Banner Optimization */
+        .cxr-alert {
+            padding: 14px 16px !important;
+            font-size: 13px !important;
+            margin-bottom: 20px !important;
+        }
+
+        /* Subheader Optimization */
+        .cxr-subheader-text {
+            font-size: 16px !important;
+        }
+        .cxr-subheader-bar {
+            height: 18px !important;
+        }
+
+        /* Tables Responsive behavior */
+        div[data-testid="stTable"] {
+            overflow-x: auto !important;
+            display: block !important;
+            width: 100% !important;
+        }
+        div[data-testid="stTable"] th, div[data-testid="stTable"] td {
+            padding: 10px 12px !important;
+            font-size: 12px !important;
+        }
+
+        /* Guide Card inside Expander */
+        .cxr-guide-box {
+            min-height: auto !important;
+            margin-bottom: 12px !important;
+            padding: 14px !important;
+        }
+    }
+
     /* Footer caption */
     .cxr-caption {
         font-size: 12px !important;
@@ -519,7 +613,7 @@ with st.expander("ℹ️ Przewodnik: Jak interpretować wskaźniki i czytać wyk
     g_cols = st.columns(3)
     with g_cols[0]:
         st.markdown(
-'<div style="background-color: #131f33; padding: 18px; border-radius: 6px; border-left: 4px solid #5B8DEF; min-height: 160px;">'
+'<div class="cxr-guide-box" style="background-color: #131f33; padding: 18px; border-radius: 6px; border-left: 4px solid #5B8DEF;">'
 '<strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px; font-family: \'Poppins\', sans-serif;">RSI (Relative Strength Index)</strong>'
 '<p style="color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.5; margin: 0; font-family: \'Poppins\', sans-serif;">'
 'Mierzy pęd ceny w skali 0-100:<br>'
@@ -531,7 +625,7 @@ with st.expander("ℹ️ Przewodnik: Jak interpretować wskaźniki i czytać wyk
         )
     with g_cols[1]:
         st.markdown(
-'<div style="background-color: #131f33; padding: 18px; border-radius: 6px; border-left: 4px solid #cde200; min-height: 160px;">'
+'<div class="cxr-guide-box" style="background-color: #131f33; padding: 18px; border-radius: 6px; border-left: 4px solid #cde200;">'
 '<strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px; font-family: \'Poppins\', sans-serif;">EMA-20 % (Średnia Krótkoterminowa)</strong>'
 '<p style="color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.5; margin: 0; font-family: \'Poppins\', sans-serif;">'
 'Odchylenie ceny od 20-okresowej średniej wykładniczej:<br>'
@@ -543,7 +637,7 @@ with st.expander("ℹ️ Przewodnik: Jak interpretować wskaźniki i czytać wyk
         )
     with g_cols[2]:
         st.markdown(
-'<div style="background-color: #131f33; padding: 18px; border-radius: 6px; border-left: 4px solid #FF9F43; min-height: 160px;">'
+'<div class="cxr-guide-box" style="background-color: #131f33; padding: 18px; border-radius: 6px; border-left: 4px solid #FF9F43;">'
 '<strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px; font-family: \'Poppins\', sans-serif;">SMA-200 % (Trend Długoterminowy)</strong>'
 '<p style="color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.5; margin: 0; font-family: \'Poppins\', sans-serif;">'
 'Odchylenie ceny od 200-okresowej średniej prostej:<br>'
