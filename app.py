@@ -262,70 +262,75 @@ st.markdown("""
     @media (max-width: 640px) {
         /* Container padding reduction to maximize space */
         [data-testid="stAppViewBlockContainer"] {
-            padding: 16px 12px !important;
+            padding: 8px 6px !important;
         }
         [data-testid="stHeader"] {
             display: none !important;
+        }
+        
+        /* Column gap and margin reduction */
+        div[data-testid="column"] {
+            margin-bottom: 8px !important;
         }
         
         /* Header Group Styles */
         .cxr-header-group {
             flex-direction: column !important;
             text-align: center !important;
-            padding: 16px !important;
-            gap: 12px !important;
-            margin-bottom: 20px !important;
+            padding: 10px 12px !important;
+            gap: 6px !important;
+            margin-bottom: 12px !important;
         }
         .cxr-emojicon {
-            width: 48px !important;
-            height: 48px !important;
-            font-size: 24px !important;
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 18px !important;
         }
         .cxr-title {
-            font-size: 22px !important;
+            font-size: 16px !important;
         }
         .cxr-neon-highlight {
             margin-left: 0 !important;
-            margin-top: 6px !important;
-            font-size: 14px !important;
-            padding: 2px 8px !important;
+            margin-top: 4px !important;
+            font-size: 11px !important;
+            padding: 1px 6px !important;
         }
         .cxr-subtitle {
-            font-size: 12px !important;
+            font-size: 10px !important;
             margin-top: 4px !important;
         }
 
         /* Metric Cards Optimization */
         .uxr-metric-card {
-            padding: 14px 16px !important;
-            min-height: 90px !important;
-            margin-bottom: 12px !important;
+            padding: 8px 10px !important;
+            min-height: 70px !important;
+            margin-bottom: 8px !important;
         }
         .uxr-metric-value {
-            font-size: 22px !important;
+            font-size: 18px !important;
         }
         .uxr-metric-title {
-            font-size: 10px !important;
+            font-size: 9px !important;
             margin-bottom: 4px !important;
         }
         .uxr-metric-delta {
-            font-size: 11px !important;
-            margin-top: 4px !important;
+            font-size: 10px !important;
+            margin-top: 2px !important;
         }
 
         /* Alert Banner Optimization */
         .cxr-alert {
-            padding: 14px 16px !important;
-            font-size: 13px !important;
-            margin-bottom: 20px !important;
+            padding: 10px 12px !important;
+            font-size: 11px !important;
+            margin-bottom: 12px !important;
         }
 
         /* Subheader Optimization */
         .cxr-subheader-text {
-            font-size: 16px !important;
+            font-size: 13px !important;
         }
         .cxr-subheader-bar {
-            height: 18px !important;
+            height: 12px !important;
         }
 
         /* Tables Responsive behavior */
@@ -335,15 +340,42 @@ st.markdown("""
             width: 100% !important;
         }
         div[data-testid="stTable"] th, div[data-testid="stTable"] td {
-            padding: 10px 12px !important;
-            font-size: 12px !important;
+            padding: 6px 8px !important;
+            font-size: 10px !important;
+        }
+
+        /* Expander overrides */
+        div[data-testid="stExpander"] summary {
+            padding: 8px 12px !important;
+            font-size: 11px !important;
+        }
+        div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+            padding: 12px !important;
+        }
+
+        /* Column-nested expanders overrides */
+        div[data-testid="column"] div[data-testid="stExpander"] {
+            margin-bottom: 4px !important;
+        }
+        div[data-testid="column"] div[data-testid="stExpander"] summary {
+            padding: 6px 10px !important;
+            font-size: 10px !important;
+        }
+        div[data-testid="column"] div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+            padding: 8px 10px !important;
+            font-size: 10px !important;
         }
 
         /* Guide Card inside Expander */
         .cxr-guide-box {
             min-height: auto !important;
             margin-bottom: 12px !important;
-            padding: 14px !important;
+            padding: 10px !important;
+        }
+
+        /* Plotly Chart Height Control */
+        .js-plotly-plot, .plotly, [data-testid="stPlotlyChart"] > div {
+            height: 260px !important;
         }
     }
 
@@ -557,6 +589,15 @@ with cols[0]:
         delta_color=cnn_delta_color, 
         border_type=cnn_border
     ), unsafe_allow_html=True)
+    with st.expander("ℹ️ Poziomy"):
+        st.markdown("""
+        **Skala sentymentu CNN:**
+        - **0-25**: Ekstremalny strach (okazja zakupowa)
+        - **25-45**: Strach (niepokój na rynkach)
+        - **45-55**: Neutralny (brak kierunku)
+        - **55-75**: Chciwość (optymizm)
+        - **75-100**: Ekstremalna chciwość (ryzyko przegrzania rynków)
+        """)
 
 # 2. Crypto Fear & Greed Card
 crypto_border = "negative" if crypto_score < 25 else ("alert" if crypto_score < 45 else ("informative" if crypto_score < 60 else "positive"))
@@ -569,6 +610,15 @@ with cols[1]:
         delta_color=crypto_delta_color, 
         border_type=crypto_border
     ), unsafe_allow_html=True)
+    with st.expander("ℹ️ Poziomy"):
+        st.markdown("""
+        **Skala sentymentu krypto:**
+        - **0-25**: Ekstremalny strach (dołek cenowy)
+        - **25-45**: Strach (niepewność)
+        - **45-55**: Neutralny (konsolidacja)
+        - **55-75**: Chciwość (optymizm)
+        - **75-100**: Ekstremalna chciwość (ryzyko nagłej korekty)
+        """)
 
 # 3. WIG20 Card
 wig_val = indicators.get("^WIG20", {"current": 0, "change_24h": 0})
@@ -582,6 +632,12 @@ with cols[2]:
         delta_color="positive" if wig_val['change_24h'] >= 0 else "negative", 
         border_type=wig_border
     ), unsafe_allow_html=True)
+    with st.expander("ℹ️ WPŁYW"):
+        st.markdown("""
+        **Indeks największych spółek GPW:**
+        - **Wzrost (zielony)**: Lokalna hossa, napływ kapitału, siła gospodarki.
+        - **Spadek (czerwony)**: Schłodzenie, wyprzedaż akcji, nastrój Risk-Off.
+        """)
 
 # 4. USD/PLN Card
 usd_val = indicators.get("USDPLN=X", {"current": 0, "change_24h": 0})
@@ -596,6 +652,12 @@ with cols[3]:
         delta_color="negative" if usd_is_negative else "positive", 
         border_type=usd_border
     ), unsafe_allow_html=True)
+    with st.expander("ℹ️ WPŁYW"):
+        st.markdown("""
+        **Główna para rynków wschodzących:**
+        - **Wzrost (osłabienie PLN)**: Złe wieści dla GPW (odpływ kapitału).
+        - **Spadek (umocnienie PLN)**: Bardzo dobre wieści (napływ kapitału).
+        """)
 
 # --- Educational Legend & Guide ---
 st.markdown("<br>", unsafe_allow_html=True)
