@@ -378,11 +378,6 @@ st.markdown("""
             padding: 10px !important;
         }
 
-        /* Plotly Chart Height Control */
-        .js-plotly-plot, .plotly, [data-testid="stPlotlyChart"] > div {
-            height: 220px !important;
-        }
-
         /* Responsive spacer helper */
         .st-spacer-mobile {
             display: none !important;
@@ -766,7 +761,7 @@ fig.update_layout(
         linecolor="rgba(255,255,255,0.1)",
         tickfont=dict(color="rgba(255,255,255,0.6)")
     ),
-    height=400,
+    height=320,
     margin=dict(l=20, r=20, t=20, b=20),
     legend=dict(
         orientation="h",
