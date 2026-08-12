@@ -382,6 +382,11 @@ st.markdown("""
         .js-plotly-plot, .plotly, [data-testid="stPlotlyChart"] > div {
             height: 220px !important;
         }
+
+        /* Responsive spacer helper */
+        .st-spacer-mobile {
+            display: none !important;
+        }
     }
 
     /* Footer caption */
@@ -455,27 +460,23 @@ def get_market_data(tickers, period="2y", interval="1d"):
         return data['Close']
     return pd.DataFrame()
 
-# --- App Logic ---
+# --- App Logic & Controls ---
 
-# Sidebar: Controls & Manual Refresh
-st.sidebar.markdown(f"""
-    <div style="margin-bottom: 20px;">
-        <h3 style="color: #ffffff; font-weight: 600; margin-bottom: 12px; font-size: 18px;">Ustawienia analizy</h3>
-    </div>
-""", unsafe_allow_html=True)
+# Pasek kontrolny w głównym oknie (doskonale widoczny na mobile i desktopie)
+ctrl_cols = st.columns([3, 1])
+with ctrl_cols[0]:
+    time_range = st.selectbox(
+        "Przedział czasowy analizy",
+        ["Ostatnie 72 godziny (Widok godzinowy)", "Ostatnie 30 dni (Widok dzienny)"],
+        label_visibility="visible"
+    )
+with ctrl_cols[1]:
+    st.markdown("<div style='height: 28px;' class='st-spacer-mobile'></div>", unsafe_allow_html=True) # Ukrywany na mobile odstęp
+    if st.button("🔄 Odśwież dane", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
 
-if st.sidebar.button("🔄 Odśwież notowania"):
-    st.cache_data.clear()
-    st.rerun()
-
-st.sidebar.markdown("<br>", unsafe_allow_html=True)
-
-time_range = st.sidebar.selectbox(
-    "Przedział czasowy",
-    ["Ostatnie 72 godziny", "Ostatnie 30 dni"]
-)
-
-if time_range == "Ostatnie 72 godziny":
+if "Ostatnie 72 godziny" in time_range:
     fetch_period = "1mo"
     interval = "1h"
     display_rows = 72
