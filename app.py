@@ -262,75 +262,80 @@ st.markdown("""
     @media (max-width: 640px) {
         /* Container padding reduction to maximize space */
         [data-testid="stAppViewBlockContainer"] {
-            padding: 8px 6px !important;
+            padding: 4px 6px !important;
         }
         [data-testid="stHeader"] {
             display: none !important;
         }
         
+        /* Global Streamlit widget bottom margin reduction */
+        [data-testid="element-container"] {
+            margin-bottom: 4px !important;
+        }
+        
         /* Column gap and margin reduction */
         div[data-testid="column"] {
-            margin-bottom: 8px !important;
+            margin-bottom: 4px !important;
         }
         
         /* Header Group Styles */
         .cxr-header-group {
             flex-direction: column !important;
             text-align: center !important;
-            padding: 10px 12px !important;
-            gap: 6px !important;
-            margin-bottom: 12px !important;
+            padding: 8px 10px !important;
+            gap: 4px !important;
+            margin-bottom: 8px !important;
         }
         .cxr-emojicon {
-            width: 36px !important;
-            height: 36px !important;
-            font-size: 18px !important;
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 16px !important;
         }
         .cxr-title {
-            font-size: 16px !important;
+            font-size: 15px !important;
         }
         .cxr-neon-highlight {
             margin-left: 0 !important;
-            margin-top: 4px !important;
-            font-size: 11px !important;
-            padding: 1px 6px !important;
+            margin-top: 2px !important;
+            font-size: 10px !important;
+            padding: 1px 4px !important;
         }
         .cxr-subtitle {
-            font-size: 10px !important;
-            margin-top: 4px !important;
+            font-size: 9px !important;
+            margin-top: 2px !important;
         }
 
         /* Metric Cards Optimization */
         .uxr-metric-card {
-            padding: 8px 10px !important;
-            min-height: 70px !important;
-            margin-bottom: 8px !important;
-        }
-        .uxr-metric-value {
-            font-size: 18px !important;
-        }
-        .uxr-metric-title {
-            font-size: 9px !important;
+            padding: 6px 8px !important;
+            min-height: 60px !important;
             margin-bottom: 4px !important;
         }
+        .uxr-metric-value {
+            font-size: 16px !important;
+        }
+        .uxr-metric-title {
+            font-size: 8px !important;
+            margin-bottom: 2px !important;
+        }
         .uxr-metric-delta {
-            font-size: 10px !important;
-            margin-top: 2px !important;
+            font-size: 9px !important;
+            margin-top: 1px !important;
         }
 
         /* Alert Banner Optimization */
         .cxr-alert {
-            padding: 10px 12px !important;
-            font-size: 11px !important;
-            margin-bottom: 12px !important;
+            padding: 8px 10px !important;
+            font-size: 10px !important;
+            margin-bottom: 8px !important;
         }
 
         /* Subheader Optimization */
         .cxr-subheader-text {
-            font-size: 13px !important;
+            font-size: 12px !important;
         }
         .cxr-subheader-bar {
-            height: 12px !important;
+            height: 10px !important;
         }
 
         /* Tables Responsive behavior */
@@ -375,7 +380,7 @@ st.markdown("""
 
         /* Plotly Chart Height Control */
         .js-plotly-plot, .plotly, [data-testid="stPlotlyChart"] > div {
-            height: 260px !important;
+            height: 220px !important;
         }
     }
 
