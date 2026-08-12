@@ -1,0 +1,7 @@
+streamlit
+yfinance
+plotly
+requests
+pandas
+fear-greed
+streamlit-autorefresh
