@@ -5,3 +5,5 @@ requests
 pandas
 fear-greed
 streamlit-autorefresh
+feedparser
+vaderSentiment
