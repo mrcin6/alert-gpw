@@ -8,6 +8,10 @@ import numpy as np
 from streamlit_autorefresh import st_autorefresh
 import feedparser
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import pytz
+
+def get_poland_time():
+    return datetime.now(pytz.timezone('Europe/Warsaw'))
 
 # --- Configuration & Styling ---
 st.set_page_config(page_title="GPW Early Warning & LPP Dashboard", layout="wide")
@@ -577,7 +581,7 @@ with tab_risk:
     with header_col2:
         st.markdown(f"""
             <div style="text-align: right; padding-top: 24px; color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500;">
-                ⏱️ {datetime.now().strftime('%H:%M:%S')}
+                ⏱️ {get_poland_time().strftime('%H:%M:%S')}
             </div>
         """, unsafe_allow_html=True)
 
@@ -986,4 +990,4 @@ with tab_lpp:
         st.info("Brak nowych wzmianek dla LPP S.A. w tym momencie.")
 
 # --- Global Footer ---
-st.markdown(f'<div class="cxr-caption">Dane aktualizowane automatycznie co 5 minut. Ostatni odczyt: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="cxr-caption">Dane aktualizowane automatycznie co 5 minut. Ostatni odczyt: {get_poland_time().strftime("%Y-%m-%d %H:%M:%S")}</div>', unsafe_allow_html=True)
