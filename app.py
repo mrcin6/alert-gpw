@@ -503,6 +503,7 @@ with tab_risk:
         st.markdown("<div style='height: 28px;' class='st-spacer-mobile'></div>", unsafe_allow_html=True) # Ukrywany na mobile odstęp
         if st.button("🔄 Odśwież dane", use_container_width=True, key="refresh_risk"):
             st.cache_data.clear()
+            st.toast("Notowania i sentyment zostały zaktualizowane!", icon="🔄")
             st.rerun()
 
     if "Ostatnie 72 godziny" in time_range:
@@ -856,6 +857,18 @@ with tab_lpp:
             </div>
         </div>
     """, unsafe_allow_html=True)
+
+    # Pasek kontrolny dla LPP S.A. (spójność z zakładką 1)
+    ctrl_cols_lpp = st.columns([3, 1])
+    with ctrl_cols_lpp[0]:
+        st.markdown("<p style='color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 6px; font-family: \"Poppins\", sans-serif;'>Automatyczny skan RSS prasowy i giełdowy (Google News)</p>", unsafe_allow_html=True)
+    with ctrl_cols_lpp[1]:
+        if st.button("🔄 Odśwież LPP", use_container_width=True, key="refresh_lpp"):
+            st.cache_data.clear()
+            st.toast("Wiadomości i kurs LPP zostały zaktualizowane!", icon="🔄")
+            st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # 1. Kurs LPP dla kontekstu
     try:
