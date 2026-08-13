@@ -400,11 +400,6 @@ st.markdown("""
             padding: 10px !important;
         }
 
-        /* Plotly Chart Height Control */
-        .js-plotly-plot, .plotly, [data-testid="stPlotlyChart"] > div {
-            height: 220px !important;
-        }
-
         /* Responsive spacer helper */
         .st-spacer-mobile {
             display: none !important;
