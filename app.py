@@ -860,7 +860,7 @@ with tab_risk:
     st.markdown("<br>", unsafe_allow_html=True)
     with st.expander("ℹ️ Przewodnik: Jak interpretować wskaźniki, sentyment i czytać wykres?"):
         # Podział na sekcje edukacyjne
-        edu_tabs = st.tabs(["📊 Sentyment i Aktywa", "📈 Jak czytać wykres?", "🔍 Wskaźniki Techniczne"])
+        edu_tabs = st.tabs(["📊 Sentyment i Aktywa", "🚨 System Alertów", "📈 Jak czytać wykres?", "🔍 Wskaźniki Techniczne"])
         
         with edu_tabs[0]:
             st.markdown("""
@@ -887,6 +887,36 @@ with tab_risk:
             
         with edu_tabs[1]:
             st.markdown("""
+            ### 🚨 Metodologia Wyznaczania Alertów Rynkowych (Risk Engine)
+            
+            Ogólny stan systemu (werdykt ostrzegawczy na samej górze strony) wyznaczany jest automatycznie na podstawie korelacji rynków globalnych, lokalnych wskaźników płynności i indeksów behawioralnych.
+            
+            - **🟢 Poziom 0: Stabilne Otoczenie (Green - Normal/Stable)**
+              - **Kryterium**: Wszystkie rynki bazowe i lokalne zachowują się stabilnie, mieszcząc się w granicach standardowej zmienności. Brak sygnałów odpływu kapitału.
+            
+            - **⚠️ Poziom 1: Ostrzeżenie Globalne (Yellow - Warning)**
+              - **Kryteria (dowolne z nich)**:
+                1. Spadek amerykańskiego indeksu **S&P 500** o ponad **-1.5%** w ciągu 24 godzin.
+                2. Sentyment **CNN Fear & Greed** spada poniżej **30 pkt** (strefa silnego strachu na Wall Street).
+                3. Cena bezpiecznego aktywa (**Złoto**) rośnie o ponad **+1.5%** w 24h, przy jednoczesnych spadkach na S&P 500.
+              - **Uzasadnienie**: Redukcja ryzyka (de-risking) przez globalne instytucje w USA z opóźnieniem uderza w rynki wschodzące, w tym GPW.
+            
+            - **🟠 Poziom 2: Ryzyko Lokalne / Odpływ Kapitału (Orange - Local Risk)**
+              - **Kryterium (zajście jednoczesne)**:
+                - Polski indeks **WIG20** spada o ponad **-1.5%** w 24h, **oraz**
+                - Kurs dolara do złotego (**USD/PLN**) rośnie o ponad **+1.0%** w 24h.
+              - **Uzasadnienie**: Klasyczny symptom wycofywania funduszy przez kapitał zagraniczny. Wyprzedaż polskich akcji (spadek WIG20) i jednoczesna zamiana złotówek na dolary (wzrost USD/PLN).
+            
+            - **🔴 Poziom 3: Krytyczne Ryzyko / Globalny Risk-Off (Red - Critical Risk)**
+              - **Kryteria (dowolne z nich)**:
+                1. Jednoczesny, głęboki spadek indeksu **S&P 500** oraz **Bitcoina** o ponad **-2.5%** w ciągu ostatnich 72 godzin.
+                2. Sentyment **CNN Fear & Greed** spada poniżej **20 pkt** (skrajna panika na Wall Street).
+                3. Sentyment kryptowalut (**Crypto Fear & Greed**) spada poniżej **20 pkt**.
+              - **Uzasadnienie**: Masowa, międzyaktywowa kapitulacja rynkowa (cross-asset liquidation). Brak płynności na rynkach wywołuje spadki na GPW niezależnie od lokalnych fundamentów spółek.
+            """)
+            
+        with edu_tabs[2]:
+            st.markdown("""
             ### 📈 Jak czytać wykres znormalizowany?
             
             Wykres domyślnie pokazuje ceny w **skali znormalizowanej (%)**. Oznacza to, że wszystkie aktywa zaczynają z tego samego punktu odniesienia (**100%** na początku wybranego okresu).
@@ -896,7 +926,7 @@ with tab_risk:
             *Przykład: Wartość 105% oznacza wzrost o 5% od początku okresu, a 95% oznacza spadek o 5%. Odznaczenie pola wyboru pod wykresem przywróci ceny nominalne.*
             """)
             
-        with edu_tabs[2]:
+        with edu_tabs[3]:
             st.markdown("### 🔍 Jak interpretować wskaźniki techniczne?")
             g_cols = st.columns(3)
             with g_cols[0]:
