@@ -1,0 +1,64 @@
+{
+  "monitored_assets": [
+    {
+      "ticker": "WIG20.WA",
+      "name": "WIG20",
+      "asset_type": "Index",
+      "region": "Poland",
+      "description": "Główny indeks 20 największych spółek akcyjnych GPW."
+    },
+    {
+      "ticker": "^GSPC",
+      "name": "S&P 500",
+      "asset_type": "Index",
+      "region": "US",
+      "description": "Indeks 500 wiodących przedsiębiorstw giełdowych w USA."
+    },
+    {
+      "ticker": "^IXIC",
+      "name": "Nasdaq",
+      "asset_type": "Index",
+      "region": "US",
+      "description": "Indeks spółek technologicznych z giełdy Nasdaq."
+    },
+    {
+      "ticker": "000001.SS",
+      "name": "Shanghai",
+      "asset_type": "Index",
+      "region": "China",
+      "description": "Główny indeks giełdy w Szanghaju."
+    },
+    {
+      "ticker": "GC=F",
+      "name": "Złoto",
+      "asset_type": "Commodity",
+      "region": "Global",
+      "description": "Kontrakty terminowe na złoto (safe-haven asset)."
+    },
+    {
+      "ticker": "BTC-USD",
+      "name": "Bitcoin",
+      "asset_type": "Crypto",
+      "region": "Global",
+      "description": "Wiodąca kryptowaluta, wyznacznik sentymentu spekulacyjnego."
+    },
+    {
+      "ticker": "USDPLN=X",
+      "name": "USD/PLN",
+      "asset_type": "Currency",
+      "region": "Poland/US",
+      "description": "Kurs wymiany dolara do złotego. Wskaźnik odpływu kapitału (Risk-Off)."
+    },
+    {
+      "ticker": "LPP.WA",
+      "name": "LPP S.A.",
+      "asset_type": "Stock",
+      "region": "Poland",
+      "description": "Największa polska spółka odzieżowa, główny reprezentant konsumpcji na GPW."
+    }
+  ],
+  "rss_news_feeds": [
+    "https://news.google.com/rss/search?q=LPP+S.A.+gie%C5%82da+OR+akcje+OR+Reserved&hl=pl&gl=PL&ceid=PL:pl",
+    "https://news.google.com/rss/search?q=%24LPP+GPW+OR+wycena&hl=pl&gl=PL&ceid=PL:pl"
+  ]
+}

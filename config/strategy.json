@@ -1,0 +1,31 @@
+{
+  "project_name": "GPW Early Warning & LPP Dashboard",
+  "refresh_interval_ms": 300000,
+  "alert_rules": {
+    "red_critical_risk": {
+      "sp500_72h_drop_limit": -2.5,
+      "btc_72h_drop_limit": -2.5,
+      "cnn_fear_greed_min": 20,
+      "crypto_fear_greed_min": 20,
+      "message": "🔴 Krytyczne ryzyko: Globalna wyprzedaż na rynkach akcji. Wysokie prawdopodobieństwo głębszych spadków na GPW."
+    },
+    "orange_local_risk": {
+      "wig20_24h_drop_limit": -1.5,
+      "usdpln_24h_rise_limit": 1.0,
+      "message": "🟠 Ryzyko lokalne: Odpływ kapitału z polskiego rynku. Kurs USD/PLN rośnie przy spadkach indeksu WIG20."
+    },
+    "yellow_warning": {
+      "sp500_24h_drop_limit": -1.5,
+      "cnn_fear_greed_warning": 30,
+      "gold_24h_rise_limit": 1.5,
+      "message": "⚠️ Ostrzeżenie: Pogorszenie nastrojów globalnych. Zweryfikuj poziomy zabezpieczające (Stop-Loss)."
+    },
+    "green_stable": {
+      "message": "🟢 Stabilne otoczenie: Rynek zachowuje się w normie. Brak istotnych sygnałów alarmowych."
+    }
+  },
+  "strategy_targets": {
+    "primary": "Early warning detection of capital outflows from GPW based on global S&P500 correlation and USD/PLN exchange rate volatility.",
+    "secondary": "Sentiment analysis on LPP S.A. (GPW fashion index driver) using headline-based NLP models."
+  }
+}
