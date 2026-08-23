@@ -54,6 +54,9 @@ Aplikacja opiera się na **Wieloagentowej Pętli Dewelopersko-Audytowej (Quality
 
 ## 🚀 Jak Uruchomić Kolejną Iterację (Instrukcja dla AI / Dewelopera)
 
+### 📌 GŁÓWNA REGUŁA STRATOWA:
+**Jeżeli użytkownik wyda komendę: "do tej iteracji uzyj petli agentowej", Twoim nadrzędnym obowiązkiem jest natychmiastowe uruchomienie automatycznego skryptu `./run_pipeline.sh` w celu realizacji całej iteracji dewelopersko-audytowej za pomocą wyspecjalizowanych agentów.**
+
 Gdy przystępujesz do kolejnej iteracji prac:
 1. Skonsultuj się z użytkownikiem i wprowadź wymagane modyfikacje w plikach konfiguracyjnych:
    - `config/strategy.json` (np. zmiana poziomów alertów, kryteriów ryzyka).
