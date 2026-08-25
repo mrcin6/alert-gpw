@@ -96,6 +96,12 @@ def fetch_lpp_news():
         "dobry": 1.5,
         "dobrze": 1.5,
         "ekspansję": 2.0,
+        "poprawa": 1.5,
+        "przyspieszenie": 1.0,
+        "buyback": 2.5,
+        "skup": 1.0,
+        "odbudowa": 1.0,
+        "transformacja": 0.5,
         "spadek": -2.0,
         "spadki": -2.0,
         "kryzys": -2.5,
@@ -126,6 +132,16 @@ def fetch_lpp_news():
         "zatory": -1.5,
         "zaburzenia": -1.5,
         "gwałtowne": -1.0,
+        "pogorszenie": -1.5,
+        "spowolnienie": -1.5,
+        "bankructwo": -3.5,
+        "bankrut": -3.0,
+        "upadłość": -3.5,
+        "restrukturyzacja": -1.5,
+        "zwolnienia": -2.0,
+        "inflacja": -1.0,
+        "stagflacja": -2.5,
+        "dług": -0.8,
         "🚀": 3.0,
         "📈": 2.0,
         "💎": 2.0,
@@ -240,6 +256,19 @@ st.markdown("""
         padding: 24px;
         border-radius: 8px;
         border: 1px solid rgba(255,255,255,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+    .cxr-header-group::after {
+        content: '';
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: rgba(236,250,100,0.04);
+        pointer-events: none;
     }
     .cxr-emojicon {
         width: 64px;
@@ -583,12 +612,40 @@ st.markdown("""
         }
     }
 
-    /* Footer caption */
-    .cxr-caption {
+    /* Footer bottom bar — UXR style */
+    .cxr-bottom-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #1f2b40;
+        border-radius: 8px;
+        padding: 14px 24px;
+        margin-top: 40px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .cxr-bottom-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .cxr-bottom-bar-signet {
+        color: #ecfa64;
+        font-size: 18px;
+        line-height: 1;
+    }
+    .cxr-bottom-bar-label {
+        font-size: 13px !important;
+        color: rgba(255,255,255,0.5) !important;
+        font-family: 'Poppins', sans-serif !important;
+        font-weight: 400 !important;
+    }
+    .cxr-bottom-bar-time {
         font-size: 12px !important;
-        color: rgba(255,255,255,0.4) !important;
-        text-align: center;
-        margin-top: 32px;
+        color: rgba(255,255,255,0.35) !important;
+        font-family: 'Poppins', sans-serif !important;
+        background: rgba(255,255,255,0.05);
+        padding: 3px 10px;
+        border-radius: 4px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -603,13 +660,18 @@ def render_subheader(text):
     </div>
     """, unsafe_allow_html=True)
 
-def render_metric_card(title, value, delta_text, delta_color="positive", border_type="informative"):
+def render_metric_card(title, value, delta_text, delta_color="positive", border_type="informative", progress=None):
     border_class = f"uxr-metric-card-{border_type}"
     delta_class = f"uxr-metric-delta-{delta_color}"
+    progress_html = ""
+    if progress is not None:
+        bar_color = "#FF5C5C" if progress < 25 else ("#FF9F43" if progress < 45 else ("#9CA3AF" if progress < 55 else ("#2ecc71" if progress < 75 else "#FF5C5C")))
+        progress_html = f'<div style="margin:8px 0 3px;background:rgba(255,255,255,0.1);border-radius:4px;height:5px;overflow:hidden;"><div style="width:{progress}%;height:100%;background:{bar_color};border-radius:4px;box-shadow:0 0 6px {bar_color}60;"></div></div>'
     card_html = f"""
     <div class="uxr-metric-card {border_class}">
         <div class="uxr-metric-title">{title}</div>
         <div class="uxr-metric-value">{value}</div>
+        {progress_html}
         <div class="uxr-metric-delta {delta_class}">{delta_text}</div>
     </div>
     """
@@ -623,6 +685,16 @@ try:
 except Exception:
     df_lpp_news_global = pd.DataFrame()
 
+# Pre-obliczenia statystyk sentymentu dla sidebaru
+_sb_pos = _sb_neg = _sb_neu = 0
+_sb_net = 0.0
+if not df_lpp_news_global.empty:
+    _sb_pos = int((df_lpp_news_global["Ocena Sentymentu"] == "🟢 Pozytywny").sum())
+    _sb_neg = int((df_lpp_news_global["Ocena Sentymentu"] == "🔴 Negatywny").sum())
+    _sb_neu = int((df_lpp_news_global["Ocena Sentymentu"] == "⚪ Neutralny").sum())
+    _sb_graded = _sb_pos + _sb_neg
+    _sb_net = (_sb_pos - _sb_neg) / _sb_graded * 100 if _sb_graded > 0 else 0.0
+
 # ==========================================
 # PANEL BOCZNY (st.sidebar)
 # ==========================================
@@ -635,6 +707,16 @@ st.sidebar.markdown(f"""
 """, unsafe_allow_html=True)
 
 if not df_lpp_news_global.empty:
+    _sb_color = "#2ecc71" if _sb_net > 25 else ("#FF5C5C" if _sb_net < -25 else "#A0A0A0")
+    _sb_label = "🟢 Bycze" if _sb_net > 25 else ("🔴 Niedźwiedzie" if _sb_net < -25 else "⚪ Neutralne")
+    st.sidebar.markdown(f"""
+        <div style="background-color:#131f33;border-radius:6px;padding:10px 12px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.05);">
+            <div style="font-size:10px;color:rgba(255,255,255,0.45);font-family:'Poppins',sans-serif;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:3px;">Nastrój medialny LPP</div>
+            <div style="font-size:14px;font-weight:600;color:{_sb_color};font-family:'Poppins',sans-serif;">{_sb_label} ({_sb_net:+.0f}%)</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;font-family:'Poppins',sans-serif;">🟢 {_sb_pos} &nbsp;⚪ {_sb_neu} &nbsp;🔴 {_sb_neg}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
     st.sidebar.markdown("""
         <p style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 12px; font-family: 'Poppins', sans-serif;">
             🛍️ Wzmianki LPP S.A.
@@ -723,7 +805,8 @@ with tab_risk:
         "000001.SS": "Shanghai",
         "GC=F": "Złoto",
         "BTC-USD": "Bitcoin",
-        "USDPLN=X": "USD/PLN"
+        "USDPLN=X": "USD/PLN",
+        "^VIX": "VIX"
     }
 
     with st.spinner("Aktualizacja danych rynkowych..."):
@@ -764,8 +847,8 @@ with tab_risk:
                 "current": current_price,
                 "rsi": rsi_val,
                 "ema20_dist": ((current_price / ema20) - 1) * 100 if ema20 > 0 else 0.0,
-                # Zabezpieczenie przed zerowaniem i NaN dla SMA-200 (ANALYSIS_RULES.md)
-                "sma200_dist": ((current_price / sma200) - 1) * 100 if (not np.isnan(sma200) and sma200 > 0) else 0.0,
+                # Zabezpieczenie przed zerowaniem i NaN dla SMA-200 (ANALYSIS_RULES.md); None gdy brak danych
+                "sma200_dist": ((current_price / sma200) - 1) * 100 if (not np.isnan(sma200) and sma200 > 0) else None,
                 "change_24h": change_24h,
                 "change_72h": change_72h
             }
@@ -782,51 +865,63 @@ with tab_risk:
     wig20_ch_24 = indicators.get("WIG20.WA", {}).get("change_24h", 0.0)
     usdpln_ch_24 = indicators.get("USDPLN=X", {}).get("change_24h", 0.0)
     gold_ch_24 = indicators.get("GC=F", {}).get("change_24h", 0.0)
+    vix_val = indicators.get("^VIX", {}).get("current", 0.0)
 
     alert_level = 0
-    alert_msg = "🟢 Stabilne otoczenie: Rynek zachowuje się w normie. Brak istotnych sygnałów alarmowych."
+    alert_msg = "🟢 Stabilne otoczenie: Rynek zachowuje się w normie. Brak istotnych sygnałów alarmowych. Kontynuuj standardową strategię portfelową."
     alert_class = "cxr-alert-green"
 
-    if (sp500_ch_72 < -2.5 and btc_ch_72 < -2.5) or cnn_score < 20 or crypto_score < 20:
+    if (sp500_ch_72 < -2.5 and btc_ch_72 < -2.5) or cnn_score < 20 or crypto_score < 20 or (vix_val > 0 and vix_val > 40):
         alert_level = 3
-        alert_msg = "🔴 Krytyczne ryzyko: Globalna wyprzedaż na rynkach akcji. Wysokie prawdopodobieństwo głębszych spadków na GPW."
+        vix_note = f" Indeks zmienności VIX osiągnął {vix_val:.0f} pkt (ekstremalna panika)." if vix_val > 40 else ""
+        alert_msg = f"🔴 Krytyczne ryzyko: Globalna wyprzedaż na rynkach akcji.{vix_note} Bardzo wysokie prawdopodobieństwo tąpnięcia na GPW — rozważ redukcję pozycji i hedging."
         alert_class = "cxr-alert-red"
     elif (wig20_ch_24 < -1.5 and usdpln_ch_24 > 1.0):
         alert_level = 2
-        alert_msg = "🟠 Ryzyko lokalne: Odpływ kapitału z polskiego rynku. Kurs USD/PLN rośnie przy spadkach indeksu WIG20."
+        alert_msg = "🟠 Ryzyko lokalne: Klasyczny odpływ kapitału zagranicznego — WIG20 spada, USD/PLN rośnie. Zacieśnij zlecenia obronne na polskich blue-chips."
         alert_class = "cxr-alert-orange"
-    elif (sp500_ch_24 < -1.5) or (cnn_score < 30) or (gold_ch_24 > 1.5 and sp500_ch_24 < 0):
+    elif (sp500_ch_24 < -1.5) or (cnn_score < 30) or (gold_ch_24 > 1.5 and sp500_ch_24 < 0) or (vix_val > 0 and vix_val > 30):
         alert_level = 1
-        alert_msg = "⚠️ Ostrzeżenie: Pogorszenie nastrojów globalnych. Zweryfikuj poziomy zabezpieczające (Stop-Loss)."
+        vix_note = f" VIX={vix_val:.0f} (podwyższona zmienność)." if vix_val > 30 else ""
+        alert_msg = f"⚠️ Ostrzeżenie: Pogorszenie nastrojów globalnych.{vix_note} Zweryfikuj poziomy Stop-Loss i wstrzymaj nowe zakupy akcji."
         alert_class = "cxr-alert-yellow"
 
-    st.markdown(f'<div class="cxr-alert {alert_class}">{alert_msg}</div>', unsafe_allow_html=True)
+    level_labels = {0: "Stabilny", 1: "Ostrzeżenie", 2: "Ryzyko", 3: "Krytyczny"}
+    level_label = level_labels.get(alert_level, "—")
+    st.markdown(f"""
+        <div class="cxr-alert {alert_class}" style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+            <span style="flex:1;">{alert_msg}</span>
+            <span style="background:rgba(255,255,255,0.12);border-radius:99px;padding:5px 14px;font-size:12px;font-weight:600;white-space:nowrap;letter-spacing:0.5px;">Poziom {alert_level}/3 · {level_label}</span>
+        </div>
+    """, unsafe_allow_html=True)
 
     # Kafle KPI z zachowaniem kolorów obramowania i stylów UXR
-    cols = st.columns(4)
+    cols = st.columns(5)
 
-    # 1. Kafel CNN Fear & Greed
+    # 1. Kafel CNN Fear & Greed (z paskiem wizualnym)
     cnn_border = "negative" if cnn_score < 25 else ("alert" if cnn_score < 45 else ("informative" if cnn_score < 60 else "positive"))
     cnn_delta_color = "negative" if cnn_score < 45 else "positive"
     with cols[0]:
         st.markdown(render_metric_card(
-            "Sentyment S&P 500 (CNN)", 
-            f"{cnn_score}", 
-            f"Klasyfikacja: {cnn_rating}", 
-            delta_color=cnn_delta_color, 
-            border_type=cnn_border
+            "Sentyment S&P 500 (CNN)",
+            f"{cnn_score}",
+            f"Klasyfikacja: {cnn_rating}",
+            delta_color=cnn_delta_color,
+            border_type=cnn_border,
+            progress=cnn_score
         ), unsafe_allow_html=True)
 
-    # 2. Kafel Crypto Fear & Greed
+    # 2. Kafel Crypto Fear & Greed (z paskiem wizualnym)
     crypto_border = "negative" if crypto_score < 25 else ("alert" if crypto_score < 45 else ("informative" if crypto_score < 60 else "positive"))
     crypto_delta_color = "negative" if crypto_score < 45 else "positive"
     with cols[1]:
         st.markdown(render_metric_card(
-            "Sentyment Krypto (F&G)", 
-            f"{crypto_score}", 
-            f"Klasyfikacja: {crypto_rating}", 
-            delta_color=crypto_delta_color, 
-            border_type=crypto_border
+            "Sentyment Krypto (F&G)",
+            f"{crypto_score}",
+            f"Klasyfikacja: {crypto_rating}",
+            delta_color=crypto_delta_color,
+            border_type=crypto_border,
+            progress=crypto_score
         ), unsafe_allow_html=True)
 
     # 3. Kafel WIG20
@@ -844,16 +939,29 @@ with tab_risk:
 
     # 4. Kafel USD/PLN
     usd_val = indicators.get("USDPLN=X", {"current": 0.0, "change_24h": 0.0})
-    usd_is_negative = usd_val['change_24h'] >= 0
-    usd_border = "negative" if usd_is_negative else "positive"
+    usd_rising = usd_val['change_24h'] >= 0  # wzrost USD/PLN = bad for GPW
+    usd_border = "negative" if usd_rising else "positive"
     usd_delta_sign = "+" if usd_val['change_24h'] >= 0 else ""
     with cols[3]:
         st.markdown(render_metric_card(
-            "Kurs USD/PLN", 
-            f"{usd_val['current']:.4f} zł", 
-            f"{usd_delta_sign}{usd_val['change_24h']:.2f}% (24h)", 
-            delta_color="negative" if usd_is_negative else "positive", 
+            "Kurs USD/PLN",
+            f"{usd_val['current']:.4f} zł",
+            f"{usd_delta_sign}{usd_val['change_24h']:.2f}% (24h)",
+            delta_color="negative" if usd_rising else "positive",
             border_type=usd_border
+        ), unsafe_allow_html=True)
+
+    # 5. Kafel VIX — Indeks Strachu
+    vix_border = "negative" if vix_val > 30 else ("alert" if vix_val > 20 else ("neutral" if vix_val > 15 else "positive"))
+    vix_delta_color = "negative" if vix_val > 30 else ("neutral" if vix_val > 20 else "positive")
+    vix_label = "Ekstremalna panika" if vix_val > 40 else ("Panika" if vix_val > 30 else ("Podwyższony" if vix_val > 20 else ("Normalny" if vix_val > 15 else "Spokój")))
+    with cols[4]:
+        st.markdown(render_metric_card(
+            "VIX — Indeks Strachu",
+            f"{vix_val:.1f}" if vix_val > 0 else "—",
+            f"Stan rynku: {vix_label}" if vix_val > 0 else "Brak danych",
+            delta_color=vix_delta_color,
+            border_type=vix_border
         ), unsafe_allow_html=True)
 
     # --- Educational Legend & Guide (Consolidated / Law of Proximity) ---
@@ -880,9 +988,17 @@ with tab_risk:
                - Reprezentuje 20 największych i najbardziej płynnych spółek na GPW. Wzrost oznacza napływ kapitału (hossa), spadek to schłodzenie nastrojów inwestycyjnych (bessa).
             
             4. **Kurs USD/PLN (Wskaźnik Risk-Off)**
-               - Główny barometr przepływu kapitału zagranicznego na rynki wschodzące. 
+               - Główny barometr przepływu kapitału zagranicznego na rynki wschodzące.
                - **Wzrost kursu (osłabienie PLN)**: Kapitał ucieka z Polski (złe wieści dla GPW, ryzyko wyprzedaży akcji).
-               - **Spadek kursu (umocnienie PLN)**: Kapitał napływa do Polski (bardze dobre wieści dla notowań GPW).
+               - **Spadek kursu (umocnienie PLN)**: Kapitał napływa do Polski (bardzo dobre wieści dla notowań GPW).
+
+            5. **VIX — Indeks Zmienności (CBOE Volatility Index)**
+               - Mierzy oczekiwaną zmienność rynku S&P 500 w ciągu najbliższych 30 dni. Nazywany "termometrem strachu Wall Street".
+               - **VIX < 15 (Spokój)**: Rynek jest stabilny, inwestorzy są optymistyczni i nie spodziewają się gwałtownych ruchów.
+               - **VIX 15–20 (Normalny)**: Typowa, standardowa zmienność rynkowa.
+               - **VIX 20–30 (Podwyższony)**: Narastający niepokój inwestorów — wskazane monitorowanie.
+               - **VIX > 30 (Panika)**: Wysokie napięcie rynkowe — historycznie sygnał silnych spadków (system przechodzi w tryb YELLOW).
+               - **VIX > 40 (Ekstremalna panika)**: Kryzys rynkowy — historycznie bywa punktem zwrotnym (system przechodzi w tryb RED).
             """)
             
         with edu_tabs[1]:
@@ -899,6 +1015,7 @@ with tab_risk:
                 1. Spadek amerykańskiego indeksu **S&P 500** o ponad **-1.5%** w ciągu 24 godzin.
                 2. Sentyment **CNN Fear & Greed** spada poniżej **30 pkt** (strefa silnego strachu na Wall Street).
                 3. Cena bezpiecznego aktywa (**Złoto**) rośnie o ponad **+1.5%** w 24h, przy jednoczesnych spadkach na S&P 500.
+                4. Indeks zmienności **VIX** przekracza **30 pkt** (podwyższona panika i zmienność rynku).
               - **Uzasadnienie**: Redukcja ryzyka (de-risking) przez globalne instytucje w USA z opóźnieniem uderza w rynki wschodzące, w tym GPW.
             
             - **🟠 Poziom 2: Ryzyko Lokalne / Odpływ Kapitału (Orange - Local Risk)**
@@ -912,6 +1029,7 @@ with tab_risk:
                 1. Jednoczesny, głęboki spadek indeksu **S&P 500** oraz **Bitcoina** o ponad **-2.5%** w ciągu ostatnich 72 godzin.
                 2. Sentyment **CNN Fear & Greed** spada poniżej **20 pkt** (skrajna panika na Wall Street).
                 3. Sentyment kryptowalut (**Crypto Fear & Greed**) spada poniżej **20 pkt**.
+                4. Indeks zmienności **VIX** przekracza **40 pkt** (ekstremalna panika, kryzys płynności rynku).
               - **Uzasadnienie**: Masowa, międzyaktywowa kapitulacja rynkowa (cross-asset liquidation). Brak płynności na rynkach wywołuje spadki na GPW niezależnie od lokalnych fundamentów spółek.
             """)
             
@@ -980,7 +1098,8 @@ with tab_risk:
         "Shanghai": "#FF9F43",  # Orange
         "Złoto": "#FFE15D",     # Gold
         "Bitcoin": "#FF5C5C",   # Red
-        "USD/PLN": "#FF78F0"    # Pink
+        "USD/PLN": "#FF78F0",   # Pink
+        "VIX": "#A78BFA"        # Purple — indeks strachu
     }
 
     for t_id, name in tickers_map.items():
@@ -1048,10 +1167,15 @@ with tab_risk:
             if v > 70: return 'background-color: #311414; color: #FF5C5C; font-weight: bold;'
             return 'color: rgba(255,255,255,0.9);'
 
+        def fmt_sma200(v):
+            if v is None or (isinstance(v, float) and np.isnan(v)):
+                return "—"
+            return f"{v:+.2f}%"
+
         st.table(ind_df.style.format({
             'RSI': '{:.1f}',
             'EMA-20 %': '{:+.2f}%',
-            'SMA-200 %': '{:+.2f}%'
+            'SMA-200 %': fmt_sma200
         }).map(style_rsi, subset=['RSI']))
 
         # Legenda Tabeli
@@ -1135,17 +1259,40 @@ with tab_lpp:
         neg_cnt = (df_lpp_news["Ocena Sentymentu"] == "🔴 Negatywny").sum()
         total_cnt = len(df_lpp_news)
 
+        # Net Sentiment Score — byczość vs niedźwiedziość netto
+        total_graded = pos_cnt + neg_cnt
+        if total_graded > 0:
+            net_ratio = (pos_cnt - neg_cnt) / total_graded * 100
+        else:
+            net_ratio = 0.0
+
+        if net_ratio > 25:
+            lpp_verdict_msg = f"🟢 Nastrojenie Bycze: Wynik sentymentu netto wynosi <strong>+{net_ratio:.0f}%</strong>. Przewaga pozytywnych wzmianek — sygnał byczów dla $LPP."
+            lpp_verdict_class = "cxr-alert-green"
+        elif net_ratio < -25:
+            lpp_verdict_msg = f"🔴 Nastrojenie Niedźwiedzie: Wynik sentymentu netto wynosi <strong>{net_ratio:.0f}%</strong>. Przewaga negatywnych wzmianek — sygnał niedźwiedzi dla $LPP."
+            lpp_verdict_class = "cxr-alert-red"
+        else:
+            lpp_verdict_msg = f"⚪ Nastrojenie Neutralne: Wynik sentymentu netto wynosi <strong>{net_ratio:+.0f}%</strong>. Brak dominującego trendu w przekazie medialnym dla $LPP."
+            lpp_verdict_class = "cxr-alert-yellow"
+
+        st.markdown(f'<div class="cxr-alert {lpp_verdict_class}">{lpp_verdict_msg}</div>', unsafe_allow_html=True)
+
         render_subheader("Podsumowanie sentymentu NLP")
-        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-        
+        col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
+
         with col_m1:
             st.markdown(render_metric_card("Pobrane wpisy", f"{total_cnt}", "Baza nagłówków RSS", "positive", "informative"), unsafe_allow_html=True)
         with col_m2:
-            st.markdown(render_metric_card("Pozytywne", f"{pos_cnt}", "Sygnały bycze (NLP)", "positive", "positive"), unsafe_allow_html=True)
+            st.markdown(render_metric_card("Pozytywne 🟢", f"{pos_cnt}", "Sygnały bycze (NLP)", "positive", "positive"), unsafe_allow_html=True)
         with col_m3:
-            st.markdown(render_metric_card("Neutralne", f"{neu_cnt}", "Równowaga informacyjna", "positive", "neutral"), unsafe_allow_html=True)
+            st.markdown(render_metric_card("Neutralne ⚪", f"{neu_cnt}", "Równowaga informacyjna", "neutral", "neutral"), unsafe_allow_html=True)
         with col_m4:
-            st.markdown(render_metric_card("Negatywne", f"{neg_cnt}", "Sygnały niedźwiedzie (NLP)", "negative", "negative"), unsafe_allow_html=True)
+            st.markdown(render_metric_card("Negatywne 🔴", f"{neg_cnt}", "Sygnały niedźwiedzie (NLP)", "negative", "negative"), unsafe_allow_html=True)
+        with col_m5:
+            net_border = "positive" if net_ratio > 25 else ("negative" if net_ratio < -25 else "neutral")
+            net_color = "positive" if net_ratio > 25 else ("negative" if net_ratio < -25 else "neutral")
+            st.markdown(render_metric_card("Sentyment Netto", f"{net_ratio:+.0f}%", "Bycze vs Niedźwiedzie", net_color, net_border, progress=int(max(0, min(100, 50 + net_ratio / 2)))), unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         render_subheader("Najnowsze nagłówki i wzmianki o LPP S.A.")
@@ -1173,4 +1320,12 @@ with tab_lpp:
         st.info("Brak nowych wzmianek dla LPP S.A. w tym momencie.")
 
 # --- Global Footer ---
-st.markdown(f'<div class="cxr-caption">Dane aktualizowane automatycznie co 5 minut. Ostatni odczyt: {get_poland_time().strftime("%Y-%m-%d %H:%M:%S")}</div>', unsafe_allow_html=True)
+st.markdown(f"""
+    <div class="cxr-bottom-bar">
+        <div class="cxr-bottom-bar-left">
+            <span class="cxr-bottom-bar-signet">✳</span>
+            <span class="cxr-bottom-bar-label">Alert GPW · System Wczesnego Ostrzegania &nbsp;|&nbsp; Dane: Yahoo Finance · CNN · Alternative.me · Google News RSS</span>
+        </div>
+        <span class="cxr-bottom-bar-time">Aktualizacja: {get_poland_time().strftime('%Y-%m-%d %H:%M:%S')}</span>
+    </div>
+""", unsafe_allow_html=True)
