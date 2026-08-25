@@ -200,7 +200,11 @@ def fetch_lpp_news():
     return pd.DataFrame(articles)
 
 # --- Configuration & Styling ---
-st.set_page_config(page_title="GPW Early Warning & LPP Dashboard", layout="wide")
+st.set_page_config(
+    page_title="Alert GPW",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # Automatyczne odświeżanie co 5 minut (300 000 ms)
 st_autorefresh(interval=5 * 60 * 1000, key="data_refresh")
@@ -209,36 +213,50 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-    /* Global Typography & Background */
+    /* ================================================
+       MOBILE-FIRST BASE STYLES (domyślne = mobile)
+       ================================================ */
+
     html, body, [data-testid="stAppViewContainer"], .stApp {
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         background-color: #131f33 !important;
         color: #ffffff !important;
     }
 
-    /* Sidebar container and content */
+    /* Ukryj systemowy header Streamlit (zajmuje miejsce na mobile) */
+    [data-testid="stHeader"] { display: none !important; }
+
+    /* Kompaktowy padding kontenera na mobile */
+    [data-testid="stAppViewBlockContainer"] {
+        padding: 8px 10px !important;
+        max-width: 100% !important;
+    }
+
+    /* Sidebar */
     [data-testid="stSidebar"] {
         background-color: #111926 !important;
         border-right: 1px solid rgba(255,255,255,0.05) !important;
     }
     [data-testid="stSidebar"] * {
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         color: #ffffff !important;
     }
 
-    /* Tabs Styling Overrides */
+    /* Tabs */
     div[data-testid="stTabBar"] {
         background-color: #111926 !important;
         border-radius: 8px 8px 0 0 !important;
-        padding: 8px 16px 0 16px !important;
+        padding: 6px 10px 0 10px !important;
         border: 1px solid rgba(255,255,255,0.05) !important;
         border-bottom: none !important;
     }
     button[data-testid="stTabBarTab"] {
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: 'Poppins', sans-serif !important;
         font-weight: 500 !important;
         color: rgba(255,255,255,0.6) !important;
-        font-size: 15px !important;
+        font-size: 13px !important;
+        padding: 8px 10px !important;
+        min-height: 44px !important;
     }
     button[data-testid="stTabBarTab"][aria-selected="true"] {
         color: #ecfa64 !important;
@@ -246,14 +264,14 @@ st.markdown("""
         font-weight: 600 !important;
     }
 
-    /* Header Group Styles */
+    /* Header Group — mobile base */
     .cxr-header-group {
         display: flex;
         align-items: center;
-        gap: 20px;
-        margin-bottom: 32px;
+        gap: 12px;
+        margin-bottom: 16px;
         background-color: #1f2b40;
-        padding: 24px;
+        padding: 14px 16px;
         border-radius: 8px;
         border: 1px solid rgba(255,255,255,0.05);
         position: relative;
@@ -262,32 +280,25 @@ st.markdown("""
     .cxr-header-group::after {
         content: '';
         position: absolute;
-        top: -60px;
-        right: -60px;
-        width: 200px;
-        height: 200px;
+        top: -40px; right: -40px;
+        width: 120px; height: 120px;
         border-radius: 50%;
         background: rgba(236,250,100,0.04);
         pointer-events: none;
     }
     .cxr-emojicon {
-        width: 64px;
-        height: 64px;
+        flex-shrink: 0;
+        width: 44px; height: 44px;
         background-color: #131f33;
         border: 2px solid rgba(255,255,255,0.1);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    .cxr-header-text {
-        display: flex;
-        flex-direction: column;
-    }
+    .cxr-header-text { display: flex; flex-direction: column; min-width: 0; }
     .cxr-title {
-        font-size: 30px !important;
+        font-size: 20px !important;
         font-weight: 600 !important;
         color: #ffffff !important;
         margin: 0 !important;
@@ -296,356 +307,308 @@ st.markdown("""
     .cxr-neon-highlight {
         background-color: #ecfa64;
         color: #171a27 !important;
-        padding: 2px 10px;
-        border-radius: 6px;
+        padding: 1px 7px;
+        border-radius: 5px;
         font-weight: 700;
         display: inline-block;
-        margin-left: 8px;
+        margin-left: 6px;
+        font-size: 0.85em;
+        white-space: nowrap;
     }
     .cxr-subtitle {
-        font-size: 14px !important;
+        font-size: 12px !important;
         color: rgba(255,255,255,0.6) !important;
-        margin: 6px 0 0 0 !important;
+        margin: 4px 0 0 0 !important;
         font-weight: 400 !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    /* UXR-style Note Cards / Metrics */
+    /* Zegar — ukryty na mobile, pokazywany od tabletu */
+    .mobile-clock { display: none !important; }
+
+    /* KPI Grid — responsywna siatka CSS (2 kolumny na mobile) */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    /* Metric Cards — mobile base */
     .uxr-metric-card {
         background: linear-gradient(135deg, #1f2b40 0%, #172030 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255,255,255,0.03) !important;
         border-radius: 8px !important;
-        border-left: 6px solid #DCDCDC !important;
-        padding: 20px !important;
-        margin-bottom: 16px !important;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-        min-height: 120px;
+        border-left: 5px solid #DCDCDC !important;
+        padding: 14px 14px !important;
+        margin-bottom: 0 !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04) !important;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
-    .uxr-metric-card-positive { border-left-color: #2ecc71 !important; }
+    .uxr-metric-card-positive  { border-left-color: #2ecc71 !important; }
     .uxr-metric-card-informative { border-left-color: #5B8DEF !important; }
-    .uxr-metric-card-negative { border-left-color: #FF5C5C !important; }
-    .uxr-metric-card-alert { border-left-color: #FF9F43 !important; }
-    .uxr-metric-card-neutral { border-left-color: #A0A0A0 !important; }
+    .uxr-metric-card-negative  { border-left-color: #FF5C5C !important; }
+    .uxr-metric-card-alert     { border-left-color: #FF9F43 !important; }
+    .uxr-metric-card-neutral   { border-left-color: #A0A0A0 !important; }
 
     .uxr-metric-title {
-        font-size: 11px !important;
-        color: rgba(255,255,255,0.6) !important;
+        font-size: 10px !important;
+        color: rgba(255,255,255,0.55) !important;
         font-weight: 500 !important;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
-        margin-bottom: 6px;
+        letter-spacing: 0.6px;
+        margin-bottom: 4px;
     }
     .uxr-metric-value {
-        font-size: 26px !important;
+        font-size: 22px !important;
         color: #ffffff !important;
         font-weight: 600 !important;
         line-height: 1.2;
     }
     .uxr-metric-delta {
-        font-size: 13px !important;
+        font-size: 11px !important;
         font-weight: 500 !important;
-        margin-top: 6px;
+        margin-top: 4px;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 3px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .uxr-metric-delta-positive { color: #2ecc71 !important; }
     .uxr-metric-delta-negative { color: #FF5C5C !important; }
-    .uxr-metric-delta-neutral { color: #A0A0A0 !important; }
+    .uxr-metric-delta-neutral  { color: #A0A0A0 !important; }
 
-    /* Alert Banner Styles */
+    /* Alert Banner — mobile: wrap pill badge gdy za wąskie */
     .cxr-alert {
-        padding: 20px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 14px 16px !important;
         border-radius: 8px !important;
-        margin-bottom: 32px !important;
+        margin-bottom: 16px !important;
         font-weight: 500 !important;
-        font-size: 15px !important;
+        font-size: 13px !important;
         line-height: 1.5 !important;
-        border-left: 8px solid !important;
+        border-left: 6px solid !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }
-    .cxr-alert-green {
-        background-color: #1a2e21 !important;
-        color: #e8f5e9 !important;
-        border-left-color: #2ecc71 !important;
-    }
-    .cxr-alert-yellow {
-        background-color: #2e2a14 !important;
-        color: #fffde7 !important;
-        border-left-color: #ecfa64 !important;
-    }
-    .cxr-alert-orange {
-        background-color: #2e2014 !important;
-        color: #fff3e0 !important;
-        border-left-color: #FF9F43 !important;
-    }
-    .cxr-alert-red {
-        background-color: #311414 !important;
-        color: #ffebee !important;
-        border-left-color: #FF5C5C !important;
-    }
+    .cxr-alert-green  { background-color: #1a2e21 !important; color: #e8f5e9 !important; border-left-color: #2ecc71 !important; }
+    .cxr-alert-yellow { background-color: #2e2a14 !important; color: #fffde7 !important; border-left-color: #ecfa64 !important; }
+    .cxr-alert-orange { background-color: #2e2014 !important; color: #fff3e0 !important; border-left-color: #FF9F43 !important; }
+    .cxr-alert-red    { background-color: #311414 !important; color: #ffebee !important; border-left-color: #FF5C5C !important; }
 
-    /* Subheader component with left accent bar */
+    /* Subheader */
     .cxr-subheader-container {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-top: 24px;
-        margin-bottom: 16px;
+        display: flex; align-items: center; gap: 10px;
+        margin-top: 20px; margin-bottom: 12px;
     }
     .cxr-subheader-bar {
-        width: 6px;
-        height: 24px;
+        flex-shrink: 0;
+        width: 5px; height: 20px;
         background-color: #ecfa64;
         border-radius: 4px;
     }
     .cxr-subheader-text {
-        font-size: 20px !important;
+        font-size: 16px !important;
         font-weight: 500 !important;
         color: #ffffff !important;
         margin: 0 !important;
     }
 
-    /* Table styling overrides */
+    /* Table — scrollowalny poziomo na mobile z touch support */
+    div[data-testid="stTable"] {
+        overflow-x: auto !important;
+        display: block !important;
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch !important;
+        border-radius: 8px !important;
+    }
     div[data-testid="stTable"] table {
         width: 100% !important;
         background-color: #1f2b40 !important;
         border-collapse: collapse !important;
-        border-radius: 8px !important;
-        overflow: hidden !important;
         border: none !important;
+        white-space: nowrap !important;
     }
     div[data-testid="stTable"] th {
         background-color: #111926 !important;
         color: #ffffff !important;
         font-weight: 500 !important;
         text-align: left !important;
-        padding: 14px 18px !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        padding: 10px 12px !important;
+        font-family: 'Poppins', sans-serif !important;
         border-bottom: 2px solid rgba(255,255,255,0.05) !important;
-        font-size: 14px !important;
+        font-size: 12px !important;
     }
     div[data-testid="stTable"] td {
         color: rgba(255,255,255,0.9) !important;
-        padding: 14px 18px !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        padding: 10px 12px !important;
+        font-family: 'Poppins', sans-serif !important;
         border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-        font-size: 14px !important;
+        font-size: 12px !important;
     }
-    div[data-testid="stTable"] tr:last-child td {
-        border-bottom: none !important;
-    }
+    div[data-testid="stTable"] tr:last-child td { border-bottom: none !important; }
 
-    /* Button and form overrides */
-    .stButton>button {
+    /* Przyciski — touch target min 44px */
+    .stButton > button {
         background-color: #1f2b40 !important;
         color: #ffffff !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
         border-radius: 6px !important;
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: 'Poppins', sans-serif !important;
         font-weight: 500 !important;
+        min-height: 44px !important;
         transition: all 0.2s ease !important;
     }
-    .stButton>button:hover {
+    .stButton > button:hover {
         background-color: #ecfa64 !important;
         color: #171a27 !important;
         border-color: #ecfa64 !important;
     }
-    
-    /* Expander styling */
+
+    /* Expander */
     div[data-testid="stExpander"] {
         background-color: #1f2b40 !important;
         border: 1px solid rgba(255,255,255,0.05) !important;
         border-radius: 8px !important;
-        margin-bottom: 24px !important;
+        margin-bottom: 16px !important;
     }
-    div[data-testid="stExpander"] details {
-        border: none !important;
-        background: transparent !important;
-    }
+    div[data-testid="stExpander"] details { border: none !important; background: transparent !important; }
     div[data-testid="stExpander"] summary {
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: 'Poppins', sans-serif !important;
         font-weight: 500 !important;
         color: #ffffff !important;
-        padding: 14px 18px !important;
+        padding: 12px 16px !important;
         cursor: pointer !important;
+        font-size: 13px !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
     }
-    div[data-testid="stExpander"] summary:hover {
-        color: #ecfa64 !important;
-    }
+    div[data-testid="stExpander"] summary:hover { color: #ecfa64 !important; }
     div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
-        padding: 20px !important;
+        padding: 14px 16px !important;
         background-color: #1f2b40 !important;
         border-top: 1px solid rgba(255,255,255,0.05) !important;
     }
+    .cxr-guide-box { min-height: auto; }
 
-    /* Guide Card inside Expander */
-    .cxr-guide-box {
-        min-height: 160px;
-    }
-
-    /* Mobile-first and Responsive Overrides */
-    @media (max-width: 640px) {
-        /* Container padding reduction to maximize space */
-        [data-testid="stAppViewBlockContainer"] {
-            padding: 4px 6px !important;
-        }
-        [data-testid="stHeader"] {
-            display: none !important;
-        }
-        
-        /* Global Streamlit widget bottom margin reduction */
-        [data-testid="element-container"] {
-            margin-bottom: 4px !important;
-        }
-        
-        /* Column gap and margin reduction */
-        div[data-testid="column"] {
-            margin-bottom: 4px !important;
-        }
-        
-        /* Header Group Styles */
-        .cxr-header-group {
-            flex-direction: column !important;
-            text-align: center !important;
-            padding: 8px 10px !important;
-            gap: 4px !important;
-            margin-bottom: 8px !important;
-        }
-        .cxr-emojicon {
-            width: 30px !important;
-            height: 30px !important;
-            font-size: 16px !important;
-        }
-        .cxr-title {
-            font-size: 18px !important;
-        }
-        .cxr-neon-highlight {
-            margin-left: 0 !important;
-            margin-top: 2px !important;
-            font-size: 10px !important;
-            padding: 1px 4px !important;
-        }
-        .cxr-subtitle {
-            font-size: 11px !important;
-            margin-top: 2px !important;
-        }
-
-        /* Metric Cards Optimization */
-        .uxr-metric-card {
-            padding: 8px 12px !important;
-            min-height: 80px !important;
-            margin-bottom: 4px !important;
-        }
-        .uxr-metric-value {
-            font-size: 18px !important;
-        }
-        .uxr-metric-title {
-            font-size: 11px !important;
-            margin-bottom: 2px !important;
-        }
-        .uxr-metric-delta {
-            font-size: 9px !important;
-            margin-top: 1px !important;
-        }
-
-        /* Alert Banner Optimization */
-        .cxr-alert {
-            padding: 8px 10px !important;
-            font-size: 10px !important;
-            margin-bottom: 8px !important;
-        }
-
-        /* Subheader Optimization */
-        .cxr-subheader-text {
-            font-size: 12px !important;
-        }
-        .cxr-subheader-bar {
-            height: 10px !important;
-        }
-
-        /* Tables Responsive behavior */
-        div[data-testid="stTable"] {
-            overflow-x: auto !important;
-            display: block !important;
-            width: 100% !important;
-        }
-        div[data-testid="stTable"] th, div[data-testid="stTable"] td {
-            padding: 6px 8px !important;
-            font-size: 12px !important;
-        }
-
-        /* Expander overrides */
-        div[data-testid="stExpander"] summary {
-            padding: 8px 12px !important;
-            font-size: 11px !important;
-        }
-        div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
-            padding: 12px !important;
-        }
-
-        /* Column-nested expanders overrides */
-        div[data-testid="column"] div[data-testid="stExpander"] {
-            margin-bottom: 4px !important;
-        }
-        div[data-testid="column"] div[data-testid="stExpander"] summary {
-            padding: 6px 10px !important;
-            font-size: 10px !important;
-        }
-        div[data-testid="column"] div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
-            padding: 8px 10px !important;
-            font-size: 10px !important;
-        }
-
-        /* Guide Card inside Expander */
-        .cxr-guide-box {
-            min-height: auto !important;
-            margin-bottom: 12px !important;
-            padding: 10px !important;
-        }
-
-        /* Responsive spacer helper */
-        .st-spacer-mobile {
-            display: none !important;
-        }
-    }
-
-    /* Footer bottom bar — UXR style */
+    /* Bottom bar — na mobile stackuje się pionowo */
     .cxr-bottom-bar {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
         background-color: #1f2b40;
         border-radius: 8px;
-        padding: 14px 24px;
-        margin-top: 40px;
+        padding: 12px 16px;
+        margin-top: 24px;
         border: 1px solid rgba(255,255,255,0.05);
     }
-    .cxr-bottom-bar-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .cxr-bottom-bar-signet {
-        color: #ecfa64;
-        font-size: 18px;
-        line-height: 1;
-    }
+    .cxr-bottom-bar-left { display: flex; align-items: center; gap: 8px; }
+    .cxr-bottom-bar-signet { color: #ecfa64; font-size: 16px; line-height: 1; }
     .cxr-bottom-bar-label {
-        font-size: 13px !important;
-        color: rgba(255,255,255,0.5) !important;
+        font-size: 11px !important;
+        color: rgba(255,255,255,0.45) !important;
         font-family: 'Poppins', sans-serif !important;
         font-weight: 400 !important;
     }
     .cxr-bottom-bar-time {
-        font-size: 12px !important;
+        font-size: 11px !important;
         color: rgba(255,255,255,0.35) !important;
         font-family: 'Poppins', sans-serif !important;
         background: rgba(255,255,255,0.05);
         padding: 3px 10px;
         border-radius: 4px;
+    }
+
+    /* ================================================
+       TABLET BREAKPOINT ≥640px
+       ================================================ */
+    @media (min-width: 640px) {
+        [data-testid="stHeader"] { display: block !important; }
+        [data-testid="stAppViewBlockContainer"] { padding: 12px 20px !important; }
+
+        .cxr-header-group { padding: 18px 22px; margin-bottom: 24px; gap: 16px; }
+        .cxr-header-group::after { width: 160px; height: 160px; top: -50px; right: -50px; }
+        .cxr-emojicon { width: 54px; height: 54px; font-size: 26px; border-radius: 11px; }
+        .cxr-title { font-size: 24px !important; }
+        .cxr-subtitle { font-size: 13px !important; white-space: normal; }
+        .cxr-neon-highlight { font-size: 0.9em; padding: 2px 9px; margin-left: 7px; }
+        .mobile-clock { display: block !important; }
+
+        .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 0; }
+        .uxr-metric-card { padding: 16px 16px !important; }
+        .uxr-metric-title { font-size: 10px !important; }
+        .uxr-metric-value { font-size: 24px !important; }
+        .uxr-metric-delta { font-size: 12px !important; white-space: normal; }
+
+        .cxr-alert { font-size: 14px !important; padding: 16px 18px !important; margin-bottom: 24px !important; border-left-width: 7px !important; }
+        .cxr-subheader-text { font-size: 18px !important; }
+        .cxr-subheader-bar { width: 5px; height: 22px; }
+
+        button[data-testid="stTabBarTab"] { font-size: 14px !important; padding: 8px 14px !important; }
+
+        div[data-testid="stTable"] th, div[data-testid="stTable"] td {
+            font-size: 13px !important; padding: 12px 14px !important;
+        }
+
+        div[data-testid="stExpander"] summary { font-size: 14px !important; padding: 12px 18px !important; }
+        div[data-testid="stExpander"] [data-testid="stExpanderDetails"] { padding: 16px 18px !important; }
+        .cxr-guide-box { min-height: 130px; }
+
+        .cxr-bottom-bar { flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 20px; margin-top: 32px; }
+        .cxr-bottom-bar-label { font-size: 12px !important; }
+        .cxr-bottom-bar-time { font-size: 11px !important; }
+    }
+
+    /* ================================================
+       DESKTOP BREAKPOINT ≥1024px
+       ================================================ */
+    @media (min-width: 1024px) {
+        [data-testid="stAppViewBlockContainer"] { padding: 16px 32px !important; }
+
+        .cxr-header-group { padding: 24px; margin-bottom: 32px; gap: 20px; }
+        .cxr-header-group::after { width: 200px; height: 200px; top: -60px; right: -60px; }
+        .cxr-emojicon { width: 64px; height: 64px; font-size: 32px; border-radius: 12px; }
+        .cxr-title { font-size: 30px !important; }
+        .cxr-subtitle { font-size: 14px !important; }
+        .cxr-neon-highlight { font-size: 1em; padding: 2px 10px; margin-left: 8px; }
+
+        .kpi-grid { grid-template-columns: repeat(5, 1fr); gap: 16px; }
+        .uxr-metric-card { padding: 20px !important; min-height: 120px; }
+        .uxr-metric-title { font-size: 11px !important; letter-spacing: 0.8px; }
+        .uxr-metric-value { font-size: 26px !important; }
+        .uxr-metric-delta { font-size: 13px !important; }
+
+        .cxr-alert { font-size: 15px !important; padding: 20px !important; margin-bottom: 32px !important; border-left-width: 8px !important; }
+        .cxr-subheader-container { margin-top: 24px; margin-bottom: 16px; }
+        .cxr-subheader-bar { width: 6px; height: 24px; }
+        .cxr-subheader-text { font-size: 20px !important; }
+
+        button[data-testid="stTabBarTab"] { font-size: 15px !important; padding: 8px 16px !important; }
+        div[data-testid="stTabBar"] { padding: 8px 16px 0 16px !important; }
+
+        div[data-testid="stTable"] { border-radius: 8px !important; }
+        div[data-testid="stTable"] table { white-space: normal !important; }
+        div[data-testid="stTable"] th { font-size: 14px !important; padding: 14px 18px !important; }
+        div[data-testid="stTable"] td { font-size: 14px !important; padding: 14px 18px !important; }
+
+        div[data-testid="stExpander"] { margin-bottom: 24px !important; }
+        div[data-testid="stExpander"] summary { font-size: 15px !important; padding: 14px 18px !important; }
+        div[data-testid="stExpander"] [data-testid="stExpanderDetails"] { padding: 20px !important; }
+        .cxr-guide-box { min-height: 160px; }
+
+        .cxr-bottom-bar { padding: 14px 24px; margin-top: 40px; }
+        .cxr-bottom-bar-label { font-size: 13px !important; }
+        .cxr-bottom-bar-time { font-size: 12px !important; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -746,7 +709,7 @@ else:
 # GŁÓWNA STRONA - STRUKTURA ZAKŁADEK
 # ==========================================
 
-tab_risk, tab_lpp = st.tabs(["📊 Globalny Risk-Off (GPW)", "🛍️ LPP S.A. - Sentyment & News"])
+tab_risk, tab_lpp = st.tabs(["📊 Risk-Off GPW", "🛍️ LPP S.A."])
 
 
 # ==========================================
@@ -767,7 +730,7 @@ with tab_risk:
         """, unsafe_allow_html=True)
     with header_col2:
         st.markdown(f"""
-            <div style="text-align: right; padding-top: 24px; color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500;">
+            <div class="mobile-clock" style="text-align:right;padding-top:20px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;">
                 ⏱️ {get_poland_time().strftime('%H:%M:%S')}
             </div>
         """, unsafe_allow_html=True)
@@ -777,7 +740,7 @@ with tab_risk:
     with ctrl_cols[0]:
         time_range = st.radio(
             "Przedział czasowy analizy",
-            ["Ostatnie 72 godziny (Widok godzinowy)", "Ostatnie 30 dni (Widok dzienny)"],
+            ["⏱ 72h — godzinowy", "📅 30 dni — dzienny"],
             horizontal=True,
             label_visibility="visible"
         )
@@ -789,7 +752,7 @@ with tab_risk:
             st.rerun()
         st.caption(f"Aktualizacja: {get_poland_time().strftime('%H:%M:%S')}")
 
-    if "Ostatnie 72 godziny" in time_range:
+    if "72h" in time_range:
         fetch_period = "1mo"
         interval = "1h"
         display_rows = 72
@@ -895,74 +858,30 @@ with tab_risk:
         </div>
     """, unsafe_allow_html=True)
 
-    # Kafle KPI z zachowaniem kolorów obramowania i stylów UXR
-    cols = st.columns(5)
-
-    # 1. Kafel CNN Fear & Greed (z paskiem wizualnym)
+    # === KPI Grid — responsywny CSS Grid (2 kol. mobile / 3 tablet / 5 desktop) ===
     cnn_border = "negative" if cnn_score < 25 else ("alert" if cnn_score < 45 else ("informative" if cnn_score < 60 else "positive"))
     cnn_delta_color = "negative" if cnn_score < 45 else "positive"
-    with cols[0]:
-        st.markdown(render_metric_card(
-            "Sentyment S&P 500 (CNN)",
-            f"{cnn_score}",
-            f"Klasyfikacja: {cnn_rating}",
-            delta_color=cnn_delta_color,
-            border_type=cnn_border,
-            progress=cnn_score
-        ), unsafe_allow_html=True)
+    card_cnn = render_metric_card("CNN Fear & Greed", f"{cnn_score}", f"{cnn_rating}", delta_color=cnn_delta_color, border_type=cnn_border, progress=cnn_score)
 
-    # 2. Kafel Crypto Fear & Greed (z paskiem wizualnym)
     crypto_border = "negative" if crypto_score < 25 else ("alert" if crypto_score < 45 else ("informative" if crypto_score < 60 else "positive"))
     crypto_delta_color = "negative" if crypto_score < 45 else "positive"
-    with cols[1]:
-        st.markdown(render_metric_card(
-            "Sentyment Krypto (F&G)",
-            f"{crypto_score}",
-            f"Klasyfikacja: {crypto_rating}",
-            delta_color=crypto_delta_color,
-            border_type=crypto_border,
-            progress=crypto_score
-        ), unsafe_allow_html=True)
+    card_crypto = render_metric_card("Crypto Fear & Greed", f"{crypto_score}", f"{crypto_rating}", delta_color=crypto_delta_color, border_type=crypto_border, progress=crypto_score)
 
-    # 3. Kafel WIG20
     wig_val = indicators.get("WIG20.WA", {"current": 0.0, "change_24h": 0.0})
-    wig_border = "positive" if wig_val['change_24h'] >= 0 else "negative"
-    wig_delta_sign = "+" if wig_val['change_24h'] >= 0 else ""
-    with cols[2]:
-        st.markdown(render_metric_card(
-            "Indeks WIG20", 
-            f"{wig_val['current']:.0f} pkt", 
-            f"{wig_delta_sign}{wig_val['change_24h']:.2f}% (24h)", 
-            delta_color="positive" if wig_val['change_24h'] >= 0 else "negative", 
-            border_type=wig_border
-        ), unsafe_allow_html=True)
+    wig_sign = "+" if wig_val['change_24h'] >= 0 else ""
+    card_wig = render_metric_card("Indeks WIG20", f"{wig_val['current']:.0f} pkt", f"{wig_sign}{wig_val['change_24h']:.2f}% (24h)", delta_color="positive" if wig_val['change_24h'] >= 0 else "negative", border_type="positive" if wig_val['change_24h'] >= 0 else "negative")
 
-    # 4. Kafel USD/PLN
     usd_val = indicators.get("USDPLN=X", {"current": 0.0, "change_24h": 0.0})
-    usd_rising = usd_val['change_24h'] >= 0  # wzrost USD/PLN = bad for GPW
-    usd_border = "negative" if usd_rising else "positive"
-    usd_delta_sign = "+" if usd_val['change_24h'] >= 0 else ""
-    with cols[3]:
-        st.markdown(render_metric_card(
-            "Kurs USD/PLN",
-            f"{usd_val['current']:.4f} zł",
-            f"{usd_delta_sign}{usd_val['change_24h']:.2f}% (24h)",
-            delta_color="negative" if usd_rising else "positive",
-            border_type=usd_border
-        ), unsafe_allow_html=True)
+    usd_rising = usd_val['change_24h'] >= 0
+    usd_sign = "+" if usd_val['change_24h'] >= 0 else ""
+    card_usd = render_metric_card("Kurs USD/PLN", f"{usd_val['current']:.4f} zł", f"{usd_sign}{usd_val['change_24h']:.2f}% (24h)", delta_color="negative" if usd_rising else "positive", border_type="negative" if usd_rising else "positive")
 
-    # 5. Kafel VIX — Indeks Strachu
     vix_border = "negative" if vix_val > 30 else ("alert" if vix_val > 20 else ("neutral" if vix_val > 15 else "positive"))
     vix_delta_color = "negative" if vix_val > 30 else ("neutral" if vix_val > 20 else "positive")
-    vix_label = "Ekstremalna panika" if vix_val > 40 else ("Panika" if vix_val > 30 else ("Podwyższony" if vix_val > 20 else ("Normalny" if vix_val > 15 else "Spokój")))
-    with cols[4]:
-        st.markdown(render_metric_card(
-            "VIX — Indeks Strachu",
-            f"{vix_val:.1f}" if vix_val > 0 else "—",
-            f"Stan rynku: {vix_label}" if vix_val > 0 else "Brak danych",
-            delta_color=vix_delta_color,
-            border_type=vix_border
-        ), unsafe_allow_html=True)
+    vix_label = "Ekstr. panika" if vix_val > 40 else ("Panika" if vix_val > 30 else ("Podwyższony" if vix_val > 20 else ("Normalny" if vix_val > 15 else "Spokój")))
+    card_vix = render_metric_card("VIX — Strach", f"{vix_val:.1f}" if vix_val > 0 else "—", f"{vix_label}" if vix_val > 0 else "Brak danych", delta_color=vix_delta_color, border_type=vix_border)
+
+    st.markdown(f'<div class="kpi-grid">{card_cnn}{card_crypto}{card_wig}{card_usd}{card_vix}</div>', unsafe_allow_html=True)
 
     # --- Educational Legend & Guide (Consolidated / Law of Proximity) ---
     st.markdown("<br>", unsafe_allow_html=True)
@@ -1207,7 +1126,7 @@ with tab_lpp:
         """, unsafe_allow_html=True)
     with header_col2_lpp:
         st.markdown(f"""
-            <div style="text-align: right; padding-top: 24px; color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500;">
+            <div class="mobile-clock" style="text-align:right;padding-top:20px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;">
                 ⏱️ {get_poland_time().strftime('%H:%M:%S')}
             </div>
         """, unsafe_allow_html=True)
@@ -1279,20 +1198,14 @@ with tab_lpp:
         st.markdown(f'<div class="cxr-alert {lpp_verdict_class}">{lpp_verdict_msg}</div>', unsafe_allow_html=True)
 
         render_subheader("Podsumowanie sentymentu NLP")
-        col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
-
-        with col_m1:
-            st.markdown(render_metric_card("Pobrane wpisy", f"{total_cnt}", "Baza nagłówków RSS", "positive", "informative"), unsafe_allow_html=True)
-        with col_m2:
-            st.markdown(render_metric_card("Pozytywne 🟢", f"{pos_cnt}", "Sygnały bycze (NLP)", "positive", "positive"), unsafe_allow_html=True)
-        with col_m3:
-            st.markdown(render_metric_card("Neutralne ⚪", f"{neu_cnt}", "Równowaga informacyjna", "neutral", "neutral"), unsafe_allow_html=True)
-        with col_m4:
-            st.markdown(render_metric_card("Negatywne 🔴", f"{neg_cnt}", "Sygnały niedźwiedzie (NLP)", "negative", "negative"), unsafe_allow_html=True)
-        with col_m5:
-            net_border = "positive" if net_ratio > 25 else ("negative" if net_ratio < -25 else "neutral")
-            net_color = "positive" if net_ratio > 25 else ("negative" if net_ratio < -25 else "neutral")
-            st.markdown(render_metric_card("Sentyment Netto", f"{net_ratio:+.0f}%", "Bycze vs Niedźwiedzie", net_color, net_border, progress=int(max(0, min(100, 50 + net_ratio / 2)))), unsafe_allow_html=True)
+        net_border = "positive" if net_ratio > 25 else ("negative" if net_ratio < -25 else "neutral")
+        net_color  = "positive" if net_ratio > 25 else ("negative" if net_ratio < -25 else "neutral")
+        lm1 = render_metric_card("Pobrane wpisy", f"{total_cnt}", "Baza nagłówków RSS", "positive", "informative")
+        lm2 = render_metric_card("Pozytywne 🟢", f"{pos_cnt}", "Sygnały bycze (NLP)", "positive", "positive")
+        lm3 = render_metric_card("Neutralne ⚪", f"{neu_cnt}", "Równowaga informacyjna", "neutral", "neutral")
+        lm4 = render_metric_card("Negatywne 🔴", f"{neg_cnt}", "Sygnały niedźwiedzie", "negative", "negative")
+        lm5 = render_metric_card("Sentyment Netto", f"{net_ratio:+.0f}%", "Bycze vs Niedźwiedzie", net_color, net_border, progress=int(max(0, min(100, 50 + net_ratio / 2))))
+        st.markdown(f'<div class="kpi-grid">{lm1}{lm2}{lm3}{lm4}{lm5}</div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         render_subheader("Najnowsze nagłówki i wzmianki o LPP S.A.")
