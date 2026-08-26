@@ -9,6 +9,8 @@ from streamlit_autorefresh import st_autorefresh
 import feedparser
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import pytz
+import re
+from bs4 import BeautifulSoup
 
 # --- Helper Functions (Module-Level) ---
 
@@ -66,138 +68,159 @@ def fetch_lpp_stock_data():
 
 @st.cache_data(ttl=600)
 def fetch_lpp_news():
-    urls = [
-        "https://news.google.com/rss/search?q=LPP+S.A.+gie%C5%82da+OR+akcje+OR+Reserved&hl=pl&gl=PL&ceid=PL:pl",
-        "https://news.google.com/rss/search?q=%24LPP+GPW+OR+wycena&hl=pl&gl=PL&ceid=PL:pl"
-    ]
-    
     analyzer = SentimentIntensityAnalyzer()
-    
-    # Rozszerzenie i adaptacja słownika VADER pod kątem polskiego słownictwa finansowego i emoji (ANALYSIS_RULES.md)
+
+    # VADER — rozszerzony słownik polskiego słownictwa finansowego (ANALYSIS_RULES.md)
     polish_lexicon = {
-        "wzrost": 2.0,
-        "wzrosty": 2.0,
-        "sukces": 2.5,
-        "zysk": 2.0,
-        "zyski": 2.0,
-        "hossa": 2.5,
-        "lider": 2.0,
-        "optymizm": 2.0,
-        "rekord": 2.5,
-        "rekordowe": 2.5,
-        "ekspansja": 2.0,
-        "dywidenda": 1.5,
-        "debiut": 1.5,
-        "rekomendacja": 1.5,
-        "rekomenduje": 1.5,
-        "kupuj": 2.0,
-        "świetne": 2.5,
-        "świetny": 2.5,
-        "dobry": 1.5,
-        "dobrze": 1.5,
-        "ekspansję": 2.0,
-        "poprawa": 1.5,
-        "przyspieszenie": 1.0,
-        "buyback": 2.5,
-        "skup": 1.0,
-        "odbudowa": 1.0,
-        "transformacja": 0.5,
-        "spadek": -2.0,
-        "spadki": -2.0,
-        "kryzys": -2.5,
-        "strata": -2.0,
-        "straty": -2.0,
-        "bessa": -2.5,
-        "krach": -3.0,
-        "panika": -2.5,
-        "redukcja": -1.5,
-        "pesymizm": -2.0,
-        "kara": -2.0,
-        "zarzuty": -2.0,
-        "problem": -1.5,
-        "problemy": -1.5,
-        "ostrzeżenie": -1.5,
-        "sprzedaj": -2.0,
-        "słabe": -2.0,
-        "słaby": -2.0,
-        "złe": -2.0,
-        "źle": -2.0,
-        "wyprzedaż": -2.0,
-        "załamanie": -2.5,
-        "short": -2.0,
-        "szort": -2.0,
-        "fikcyjne": -1.5,
-        "oskarżenia": -2.0,
-        "zarzut": -2.0,
-        "zatory": -1.5,
-        "zaburzenia": -1.5,
-        "gwałtowne": -1.0,
-        "pogorszenie": -1.5,
-        "spowolnienie": -1.5,
-        "bankructwo": -3.5,
-        "bankrut": -3.0,
-        "upadłość": -3.5,
-        "restrukturyzacja": -1.5,
-        "zwolnienia": -2.0,
-        "inflacja": -1.0,
-        "stagflacja": -2.5,
-        "dług": -0.8,
-        "🚀": 3.0,
-        "📈": 2.0,
-        "💎": 2.0,
-        "🏆": 2.5,
-        "🔥": 2.0,
-        "📉": -3.0,
-        "🔴": -1.5,
-        "💥": -2.0,
-        "⚠️": -1.5,
-        "💔": -2.0
+        "wzrost": 2.0, "wzrosty": 2.0, "sukces": 2.5, "zysk": 2.0, "zyski": 2.0,
+        "hossa": 2.5, "lider": 2.0, "optymizm": 2.0, "rekord": 2.5, "rekordowe": 2.5,
+        "ekspansja": 2.0, "dywidenda": 1.5, "debiut": 1.5, "rekomendacja": 1.5,
+        "rekomenduje": 1.5, "kupuj": 2.0, "świetne": 2.5, "świetny": 2.5,
+        "dobry": 1.5, "dobrze": 1.5, "ekspansję": 2.0, "poprawa": 1.5,
+        "przyspieszenie": 1.0, "buyback": 2.5, "skup": 1.0, "odbudowa": 1.0,
+        "transformacja": 0.5, "spadek": -2.0, "spadki": -2.0, "kryzys": -2.5,
+        "strata": -2.0, "straty": -2.0, "bessa": -2.5, "krach": -3.0,
+        "panika": -2.5, "redukcja": -1.5, "pesymizm": -2.0, "kara": -2.0,
+        "zarzuty": -2.0, "problem": -1.5, "problemy": -1.5, "ostrzeżenie": -1.5,
+        "sprzedaj": -2.0, "słabe": -2.0, "słaby": -2.0, "złe": -2.0, "źle": -2.0,
+        "wyprzedaż": -2.0, "załamanie": -2.5, "short": -2.0, "szort": -2.0,
+        "fikcyjne": -1.5, "oskarżenia": -2.0, "zarzut": -2.0, "zatory": -1.5,
+        "zaburzenia": -1.5, "gwałtowne": -1.0, "pogorszenie": -1.5,
+        "spowolnienie": -1.5, "bankructwo": -3.5, "bankrut": -3.0,
+        "upadłość": -3.5, "restrukturyzacja": -1.5, "zwolnienia": -2.0,
+        "inflacja": -1.0, "stagflacja": -2.5, "dług": -0.8,
+        "🚀": 3.0, "📈": 2.0, "💎": 2.0, "🏆": 2.5, "🔥": 2.0,
+        "📉": -3.0, "🔴": -1.5, "💥": -2.0, "⚠️": -1.5, "💔": -2.0,
     }
     analyzer.lexicon.update(polish_lexicon)
+
+    _HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+    _LPP_KEYWORDS = {"LPP", "Reserved", "Sinsay", "Cropp", "House", "Mohito"}
 
     articles = []
     seen_titles = set()
 
-    for url in urls:
+    def _score(title):
+        vs = analyzer.polarity_scores(title)
+        c = vs["compound"]
+        sentiment = "🟢 Pozytywny" if c >= 0.05 else ("🔴 Negatywny" if c <= -0.05 else "⚪ Neutralny")
+        return sentiment, round(c, 2)
+
+    def _add(title, dt_sort, published_display, link, source):
+        key = title.strip()
+        if key in seen_titles:
+            return
+        seen_titles.add(key)
+        sentiment, score = _score(title)
+        articles.append({
+            "Data opublikowania": published_display,
+            "_sort_dt": dt_sort,
+            "Tytuł / Wzmianka": title.strip(),
+            "Źródło": source,
+            "Ocena Sentymentu": sentiment,
+            "Score (Compound)": score,
+            "Link": link,
+        })
+
+    # ── ŹRÓDŁO 1: Google News RSS — prasa ogólna + Parkiet + Puls Biznesu ────
+    rss_sources = [
+        ("🔵 Google News", "https://news.google.com/rss/search?q=LPP+S.A.+gie%C5%82da+OR+akcje+OR+Reserved&hl=pl&gl=PL&ceid=PL:pl"),
+        ("🔵 Google News", "https://news.google.com/rss/search?q=%24LPP+GPW+OR+wycena+OR+wyniki&hl=pl&gl=PL&ceid=PL:pl"),
+        ("📰 Parkiet",     "https://news.google.com/rss/search?q=LPP+Reserved+OR+wyniki+site:parkiet.com&hl=pl&gl=PL&ceid=PL:pl"),
+        ("📰 Puls Biznesu","https://news.google.com/rss/search?q=LPP+Reserved+OR+wyniki+OR+akcje+site:pb.pl&hl=pl&gl=PL&ceid=PL:pl"),
+    ]
+    for source_label, url in rss_sources:
         try:
             feed = feedparser.parse(url)
             for entry in feed.entries:
                 title = entry.title
-                if title in seen_titles:
+                # Filtruj — tylko artykuły faktycznie dotyczące LPP
+                if not any(kw in title for kw in _LPP_KEYWORDS):
                     continue
-                seen_titles.add(title)
-                
-                published = getattr(entry, 'published', 'Brak daty')
-                try:
-                    parsed_date = datetime.strptime(published, "%a, %d %b %Y %H:%M:%S %Z")
-                    published = parsed_date.strftime("%Y-%m-%d %H:%M")
-                except:
-                    pass
-                    
-                link = entry.link
-                
-                # Sentyment na podstawie zaktualizowanego VADER Analyzer
-                vs = analyzer.polarity_scores(title)
-                compound = vs['compound']
-                
-                if compound >= 0.05:
-                    sentiment = "🟢 Pozytywny"
-                elif compound <= -0.05:
-                    sentiment = "🔴 Negatywny"
+                # feedparser zwraca published_parsed jako time.struct_time — niezawodne parsowanie
+                pp = entry.get("published_parsed")
+                if pp:
+                    dt = datetime(pp[0], pp[1], pp[2], pp[3], pp[4], pp[5])
+                    disp = dt.strftime("%Y-%m-%d %H:%M")
                 else:
-                    sentiment = "⚪ Neutralny"
-
-                articles.append({
-                    "Data opublikowania": published,
-                    "Tytuł / Wzmianka": title,
-                    "Ocena Sentymentu": sentiment,
-                    "Score (Compound)": round(compound, 2),
-                    "Link": link
-                })
-        except Exception as e:
+                    dt = datetime.min
+                    disp = "Brak daty"
+                _add(title, dt, disp, entry.link, source_label)
+        except Exception:
             pass
 
-    return pd.DataFrame(articles)
+    # ── ŹRÓDŁO 2: LPP.com — Raporty Bieżące (ESPI/RB) ───────────────────────
+    try:
+        r = requests.get(
+            "https://www.lpp.com/relacje-inwestorskie/raporty/raporty-biezace/",
+            headers=_HEADERS, timeout=12
+        )
+        soup = BeautifulSoup(r.text, "html.parser")
+        container = soup.find("div", class_="reports-output-container")
+        if container:
+            for item in container.find_all("div", class_="item"):
+                header = item.find("div", class_="item-header")
+                desc   = item.find("div", class_="description")
+                if not header:
+                    continue
+                title = header.get_text(strip=True)
+                desc_text = desc.get_text(strip=True) if desc else ""
+                dm = re.search(r"Data:\s*(\d{2}\.\d{2}\.\d{4})", desc_text)
+                if dm:
+                    dt = datetime.strptime(dm.group(1), "%d.%m.%Y")
+                    disp = dt.strftime("%Y-%m-%d")
+                else:
+                    dt = datetime.min
+                    disp = "Brak daty"
+                link_tag = item.find("a", href=True)
+                link = link_tag["href"] if link_tag else "https://www.lpp.com/relacje-inwestorskie/raporty/raporty-biezace/"
+                if not link.startswith("http"):
+                    link = "https://www.lpp.com" + link
+                _add(title, dt, disp, link, "🏢 LPP IR (RB)")
+    except Exception:
+        pass
+
+    # ── ŹRÓDŁO 3: LPP.com — Raporty Okresowe (kwartalne / roczne) ────────────
+    try:
+        r = requests.get(
+            "https://www.lpp.com/relacje-inwestorskie/raporty/raporty-okresowe/",
+            headers=_HEADERS, timeout=12
+        )
+        soup = BeautifulSoup(r.text, "html.parser")
+        container = soup.find("div", class_="reports-output-container")
+        if container:
+            for item in list(container.find_all("div", class_="item"))[:15]:
+                header = item.find("div", class_="item-header")
+                if not header:
+                    continue
+                title = header.get_text(strip=True)
+                link_tag = item.find("a", href=True)
+                href = link_tag["href"] if link_tag else ""
+                if not href.startswith("http"):
+                    href = "https://www.lpp.com" + href
+                # Data z URL (np. /2026/06/...) lub z tytułu (np. "za 1Q 2026")
+                year_m = re.search(r"/(\d{4})/(\d{2})/", href)
+                title_yr_m = re.search(r"(\d{4})", title)
+                if year_m:
+                    dt = datetime(int(year_m.group(1)), int(year_m.group(2)), 1)
+                    disp = dt.strftime("%Y-%m")
+                elif title_yr_m:
+                    dt = datetime(int(title_yr_m.group(1)), 1, 1)
+                    disp = title_yr_m.group(1)
+                else:
+                    dt = datetime.min
+                    disp = "Brak daty"
+                link = href if href else "https://www.lpp.com/relacje-inwestorskie/raporty/raporty-okresowe/"
+                _add(title, dt, disp, link, "🏢 LPP IR (RO)")
+    except Exception:
+        pass
+
+    # ── SORTOWANIE po dacie malejąco ─────────────────────────────────────────
+    df = pd.DataFrame(articles)
+    if not df.empty:
+        df = df.sort_values("_sort_dt", ascending=False).reset_index(drop=True)
+        df = df.drop(columns=["_sort_dt"])
+    return df
 
 # --- Configuration & Styling ---
 st.set_page_config(
@@ -1134,7 +1157,7 @@ with tab_lpp:
     # Pasek kontrolny dla LPP S.A.
     ctrl_cols_lpp = st.columns([3, 1])
     with ctrl_cols_lpp[0]:
-        st.markdown("<p style='color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 6px; font-family: \"Poppins\", sans-serif;'>Automatyczny skan RSS prasowy i giełdowy (Google News)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 6px; font-family: \"Poppins\", sans-serif;'>Źródła: Google News · Parkiet · Puls Biznesu · LPP IR (raporty bieżące &amp; okresowe)</p>", unsafe_allow_html=True)
     with ctrl_cols_lpp[1]:
         if st.button("🔄 Odśwież LPP", use_container_width=True, key="refresh_lpp"):
             st.cache_data.clear()
@@ -1222,7 +1245,7 @@ with tab_lpp:
         # Przygotowanie hiperłącza w formacie HTML
         df_lpp_display['Odnośnik'] = df_lpp_display['Link'].apply(lambda x: f'<a href="{x}" target="_blank" style="color: #ecfa64; text-decoration: none; font-weight: 500;">Otwórz artykuł ↗</a>')
         
-        df_lpp_table = df_lpp_display[["Data opublikowania", "Tytuł / Wzmianka", "Ocena Sentymentu", "Odnośnik"]]
+        df_lpp_table = df_lpp_display[["Data opublikowania", "Źródło", "Tytuł / Wzmianka", "Ocena Sentymentu", "Odnośnik"]]
         
         # Generowanie kodu HTML tabeli z zachowaniem klasy stylu
         html_table = df_lpp_table.style.map(style_sentiment, subset=["Ocena Sentymentu"]).to_html(index=False, escape=False)
@@ -1237,7 +1260,7 @@ st.markdown(f"""
     <div class="cxr-bottom-bar">
         <div class="cxr-bottom-bar-left">
             <span class="cxr-bottom-bar-signet">✳</span>
-            <span class="cxr-bottom-bar-label">Alert GPW · System Wczesnego Ostrzegania &nbsp;|&nbsp; Dane: Yahoo Finance · CNN · Alternative.me · Google News RSS</span>
+            <span class="cxr-bottom-bar-label">Alert GPW · System Wczesnego Ostrzegania &nbsp;|&nbsp; Dane: Yahoo Finance · CNN · Alternative.me · Google News · Parkiet · Puls Biznesu · LPP IR</span>
         </div>
         <span class="cxr-bottom-bar-time">Aktualizacja: {get_poland_time().strftime('%Y-%m-%d %H:%M:%S')}</span>
     </div>

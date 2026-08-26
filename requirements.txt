@@ -7,3 +7,4 @@ fear-greed
 streamlit-autorefresh
 feedparser
 vaderSentiment
+beautifulsoup4
