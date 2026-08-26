@@ -630,14 +630,14 @@ def render_metric_card(title, value, delta_text, delta_color="positive", border_
     if progress is not None:
         bar_color = "#FF5C5C" if progress < 25 else ("#FF9F43" if progress < 45 else ("#9CA3AF" if progress < 55 else ("#2ecc71" if progress < 75 else "#FF5C5C")))
         progress_html = f'<div style="margin:8px 0 3px;background:rgba(255,255,255,0.1);border-radius:4px;height:5px;overflow:hidden;"><div style="width:{progress}%;height:100%;background:{bar_color};border-radius:4px;box-shadow:0 0 6px {bar_color}60;"></div></div>'
-    card_html = f"""
-    <div class="uxr-metric-card {border_class}">
-        <div class="uxr-metric-title">{title}</div>
-        <div class="uxr-metric-value">{value}</div>
-        {progress_html}
-        <div class="uxr-metric-delta {delta_class}">{delta_text}</div>
-    </div>
-    """
+    card_html = (
+        f'<div class="uxr-metric-card {border_class}">'
+        f'<div class="uxr-metric-title">{title}</div>'
+        f'<div class="uxr-metric-value">{value}</div>'
+        f'{progress_html}'
+        f'<div class="uxr-metric-delta {delta_class}">{delta_text}</div>'
+        f'</div>'
+    )
     return card_html
 
 # --- Global Data Preparation ---
